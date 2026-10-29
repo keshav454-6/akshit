@@ -5,8 +5,8 @@ import android.os.Bundle;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebChromeClient;
 import android.view.Window;
-import android.view.WindowManager;
 
 public class MainActivity extends Activity {
     private WebView webView;
@@ -14,9 +14,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        
+
         webView = new WebView(this);
         setContentView(webView);
 
@@ -24,14 +23,16 @@ public class MainActivity extends Activity {
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
-        settings.setLoadWithOverviewMode(true);
-        settings.setUseWideViewPort(true);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
+        settings.setAllowFileAccessFromFileURLs(true);
+        settings.setAllowUniversalAccessFromFileURLs(true);
+        settings.setUseWideViewPort(true);
+        settings.setLoadWithOverviewMode(true);
 
         webView.setWebViewClient(new WebViewClient());
-        
-        // Load offline embedded CyberShield One app
+        webView.setWebChromeClient(new WebChromeClient());
+
         webView.loadUrl("file:///android_asset/dist/index.html");
     }
 
