@@ -3,7 +3,11 @@ import os
 import uuid
 from datetime import datetime
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'cybershield.db')
+if os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
+    DB_PATH = '/tmp/cybershield.db'
+else:
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'cybershield.db')
+
 
 def get_simulated_sessions() -> list:
     """Returns all simulated session lab events from the SQLite database."""
