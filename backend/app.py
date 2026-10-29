@@ -21,7 +21,19 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 # Initialize database on startup
 init_db()
 
+@app.route('/', methods=['GET'])
+@app.route('/api', methods=['GET'])
+@app.route('/api/', methods=['GET'])
+def root_index():
+    return jsonify({
+        "status": "online",
+        "service": "CyberShield One Security Engine",
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0-hackathon"
+    })
+
 @app.route('/api/health', methods=['GET'])
+
 def health_check():
     return jsonify({
         "status": "online",

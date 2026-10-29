@@ -16,16 +16,27 @@ from app import app as flask_app
 
 class VercelPrefixMiddleware:
     """
-    Middleware ensuring PATH_INFO has the '/api' prefix so Flask's @app.route('/api/...')
-    matches regardless of whether Vercel strips the prefix or keeps it.
+    Middleware ensuring PATH_INFO correctly routes to Flask routes regardless of
+    how Vercel strips or preserves rewrites and script names.
     """
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
         path = environ.get('PATH_INFO', '')
-        if not path.startswith('/api'):
-            environ['PATH_INFO'] = '/api' + (path if path.startswith('/') else '/' + path)
+        
+        # Clean any '/api/index.py' prefix if Vercel appended file name
+        if path.startswith('/api/index.py'):
+            path = path[len('/api/index.py'):]
+        elif path.startswith('/index.py'):
+            path = path[len('/index.py'):]
+            
+        if not path or path == '':
+            path = '/api'
+        elif not path.startswith('/api') and path != '/':
+            path = '/api' + (path if path.startswith('/') else '/' + path)
+            
+        environ['PATH_INFO'] = path
         return self.wsgi_app(environ, start_response)
 
 app = VercelPrefixMiddleware(flask_app)
