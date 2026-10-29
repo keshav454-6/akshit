@@ -2,7 +2,7 @@ import os
 import json
 import uuid
 from datetime import datetime
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 
 from database import get_db, init_db
@@ -18,13 +18,16 @@ from detectors.session_detector import get_simulated_sessions, perform_session_r
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+DIST_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dist')
+DOWNLOADS_DIR = os.path.join(DIST_DIR, 'downloads')
+
 # Initialize database on startup
 init_db()
 
 @app.route('/', methods=['GET'])
 @app.route('/api', methods=['GET'])
 @app.route('/api/', methods=['GET'])
-def root_index():
+def api_index():
     return jsonify({
         "status": "online",
         "service": "CyberShield One Security Engine",
@@ -32,8 +35,8 @@ def root_index():
         "version": "1.0.0-hackathon"
     })
 
+@app.route('/health', methods=['GET'])
 @app.route('/api/health', methods=['GET'])
-
 def health_check():
     return jsonify({
         "status": "online",
@@ -41,6 +44,33 @@ def health_check():
         "timestamp": datetime.now().isoformat(),
         "version": "1.0.0-hackathon"
     })
+
+# ----------------- SYSTEM DOWNLOAD ENDPOINTS -----------------
+@app.route('/download/launcher', methods=['GET'])
+@app.route('/api/download/launcher', methods=['GET'])
+def download_launcher():
+    file_path = os.path.join(DOWNLOADS_DIR, 'CyberShield-System-Launcher.bat')
+    if os.path.isfile(file_path):
+        return send_file(file_path, as_attachment=True, download_name='CyberShield-System-Launcher.bat')
+    return jsonify({"error": "Launcher not found"}), 404
+
+@app.route('/download/package', methods=['GET'])
+@app.route('/api/download/package', methods=['GET'])
+@app.route('/download/system', methods=['GET'])
+@app.route('/api/download/system', methods=['GET'])
+def download_package():
+    file_path = os.path.join(DOWNLOADS_DIR, 'CyberShield-One-Windows.zip')
+    if os.path.isfile(file_path):
+        return send_file(file_path, as_attachment=True, download_name='CyberShield-One-Windows.zip')
+    return jsonify({"error": "Package not found"}), 404
+
+@app.route('/download/report', methods=['GET'])
+@app.route('/api/download/report', methods=['GET'])
+def download_report():
+    file_path = os.path.join(DOWNLOADS_DIR, 'CyberShield_Conversation_Report.html')
+    if os.path.isfile(file_path):
+        return send_file(file_path, as_attachment=True, download_name='CyberShield_Conversation_Report.html')
+    return jsonify({"error": "Report not found"}), 404
 
 # ----------------- MODULE 1: SCAM & FAKE CUSTOMER-CARE -----------------
 @app.route('/api/scan/message', methods=['POST'])
@@ -546,6 +576,38 @@ def init_services():
         "session_anomaly": {
             "scenario": "impossible_travel"
         }
+    })
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_frontend_spa(path):
+    if path.startswith('api/') or path == 'api':
+        return jsonify({"error": "API endpoint not found", "path": path}), 404
+
+    possible_dist_dirs = [
+        DIST_DIR,
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dist'),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'dist')
+    ]
+    current_dist = DIST_DIR
+    for d in possible_dist_dirs:
+        if os.path.isdir(d):
+            current_dist = d
+            break
+
+    file_path = os.path.join(current_dist, path)
+    if path != '' and os.path.isfile(file_path):
+        return send_from_directory(current_dist, path)
+
+    index_file = os.path.join(current_dist, 'index.html')
+    if os.path.isfile(index_file):
+        return send_file(index_file)
+
+    return jsonify({
+        "status": "online",
+        "service": "CyberShield One Security Engine",
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0-hackathon"
     })
 
 if __name__ == '__main__':

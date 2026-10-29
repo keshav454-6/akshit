@@ -30,7 +30,9 @@ venv/
 .venv/
 ENV/
 develop-eggs/
-downloads/
+/downloads/
+!frontend/public/downloads/**
+!api/dist/**
 eggs/
 .eggs/
 lib/

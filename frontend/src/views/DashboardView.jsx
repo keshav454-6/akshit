@@ -15,11 +15,12 @@ import {
   KeyRound,
   Mic,
   Activity,
-  CheckCircle2
+  CheckCircle2,
+  Download
 } from 'lucide-react';
 import ScoreGauge from '../components/ScoreGauge';
 
-export default function DashboardView({ setTab }) {
+export default function DashboardView({ setTab, setIsDownloadOpen }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -123,10 +124,31 @@ export default function DashboardView({ setTab }) {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button onClick={fetchStats} className="btn-secondary">
             <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
             <span>Refresh Telemetry</span>
+          </button>
+          <button
+            onClick={() => setIsDownloadOpen && setIsDownloadOpen(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: '#00f5d4',
+              color: '#040814',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '9px 18px',
+              fontSize: '0.86rem',
+              fontWeight: '800',
+              cursor: 'pointer',
+              boxShadow: '0 2px 10px rgba(0, 245, 212, 0.35)',
+              transition: 'all 0.2s'
+            }}
+          >
+            <Download size={16} />
+            <span>Download in System</span>
           </button>
           <button onClick={() => setTab('demo')} className="btn-cyan">
             <Zap size={16} />

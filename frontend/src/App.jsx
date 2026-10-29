@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './App.css';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
+import DownloadModal from './components/DownloadModal';
 
 // Views
 import DashboardView from './views/DashboardView';
@@ -20,11 +21,12 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchGlobal, setSearchGlobal] = useState('');
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
 
   const renderActiveView = () => {
     switch (currentTab) {
       case 'dashboard':
-        return <DashboardView setTab={setCurrentTab} />;
+        return <DashboardView setTab={setCurrentTab} setIsDownloadOpen={setIsDownloadOpen} />;
       case 'scam':
         return <ScamDetectorView />;
       case 'payment':
@@ -46,7 +48,7 @@ export default function App() {
       case 'demo':
         return <DemoCenterView setTab={setCurrentTab} />;
       default:
-        return <DashboardView setTab={setCurrentTab} />;
+        return <DashboardView setTab={setCurrentTab} setIsDownloadOpen={setIsDownloadOpen} />;
     }
   };
 
@@ -58,6 +60,7 @@ export default function App() {
         setTab={setCurrentTab}
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
+        setIsDownloadOpen={setIsDownloadOpen}
       />
 
       {/* Main Content Area */}
@@ -68,22 +71,19 @@ export default function App() {
           setIsOpen={setIsSidebarOpen}
           searchGlobal={searchGlobal}
           setSearchGlobal={setSearchGlobal}
+          setIsDownloadOpen={setIsDownloadOpen}
         />
 
         <main className="content-body">
           {renderActiveView()}
         </main>
       </div>
+
+      {/* Download in System Modal */}
+      <DownloadModal
+        isOpen={isDownloadOpen}
+        onClose={() => setIsDownloadOpen(false)}
+      />
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-

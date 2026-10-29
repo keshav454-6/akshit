@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   Sparkles,
   Shield,
-  X
+  X,
+  Download
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -29,7 +30,7 @@ const NAV_ITEMS = [
   { id: 'demo', label: 'Try Demo Mode', icon: Sparkles, badge: 'Live Presets' },
 ];
 
-export default function Sidebar({ currentTab, setTab, isOpen, setIsOpen }) {
+export default function Sidebar({ currentTab, setTab, isOpen, setIsOpen, setIsDownloadOpen }) {
   return (
     <>
       {/* Mobile Backdrop */}
@@ -171,6 +172,43 @@ export default function Sidebar({ currentTab, setTab, isOpen, setIsOpen }) {
               </button>
             );
           })}
+
+          <button
+            onClick={() => {
+              if (setIsDownloadOpen) setIsDownloadOpen(true);
+              if (window.innerWidth <= 900) setIsOpen(false);
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              width: '100%',
+              padding: '11px 14px',
+              borderRadius: '12px',
+              background: '#214C3A',
+              border: 'none',
+              color: '#FFFFFF',
+              fontWeight: '700',
+              fontSize: '0.84rem',
+              cursor: 'pointer',
+              marginTop: '10px',
+              boxShadow: '0 2px 8px rgba(33, 76, 58, 0.25)',
+              transition: 'all 180ms ease'
+            }}
+          >
+            <Download size={18} color="#00f5d4" strokeWidth={2.2} />
+            <span style={{ flex: 1, textAlign: 'left' }}>Download in System</span>
+            <span style={{
+              fontSize: '0.65rem',
+              background: '#00f5d4',
+              color: '#040814',
+              padding: '2px 6px',
+              borderRadius: '6px',
+              fontWeight: '800'
+            }}>
+              Offline
+            </span>
+          </button>
         </div>
 
         {/* Sidebar Footer */}

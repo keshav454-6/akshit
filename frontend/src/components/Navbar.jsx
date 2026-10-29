@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Shield, RefreshCw, Zap, Bell, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Menu, Shield, RefreshCw, Zap, Bell, CheckCircle2, AlertCircle, Download } from 'lucide-react';
 
-export default function Navbar({ currentTab, setTab, setIsOpen, searchGlobal, setSearchGlobal }) {
+export default function Navbar({ currentTab, setTab, setIsOpen, searchGlobal, setSearchGlobal, setIsDownloadOpen }) {
   const [backendStatus, setBackendStatus] = useState('checking');
 
   const checkHealth = async () => {
@@ -85,7 +85,7 @@ export default function Navbar({ currentTab, setTab, setIsOpen, searchGlobal, se
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
         {/* Backend Status indicator */}
         <div style={{
           display: 'flex',
@@ -109,10 +109,34 @@ export default function Navbar({ currentTab, setTab, setIsOpen, searchGlobal, se
           </span>
         </div>
 
+        {/* Download in System button */}
+        <button
+          onClick={() => setIsDownloadOpen && setIsDownloadOpen(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: '#214C3A',
+            color: '#FFFFFF',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '7px 14px',
+            fontSize: '0.8rem',
+            fontWeight: '700',
+            cursor: 'pointer',
+            boxShadow: '0 2px 6px rgba(33, 76, 58, 0.25)',
+            transition: 'all 0.2s'
+          }}
+          title="Download CyberShield for Windows / Offline System"
+        >
+          <Download size={14} />
+          <span>Download in System</span>
+        </button>
+
         {/* Hackathon Try Demo button */}
         <button
           onClick={() => setTab('demo')}
-          className="btn-primary"
+          className="btn-cyan"
           style={{ padding: '7px 14px', fontSize: '0.8rem' }}
         >
           <Zap size={14} />
@@ -122,10 +146,3 @@ export default function Navbar({ currentTab, setTab, setIsOpen, searchGlobal, se
     </header>
   );
 }
-
-
-
-
-
-
-
