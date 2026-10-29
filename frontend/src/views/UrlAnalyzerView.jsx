@@ -17,6 +17,8 @@ import {
   Activity
 } from 'lucide-react';
 import ScoreGauge from '../components/ScoreGauge';
+import SignalsBreakdown from '../components/SignalsBreakdown';
+import FeedbackWidget from '../components/FeedbackWidget';
 
 const SAMPLE_URLS = [
   {
@@ -391,6 +393,17 @@ export default function UrlAnalyzerView() {
               </div>
             </div>
           </div>
+
+          {/* Documented Signals Analysed */}
+          <SignalsBreakdown signals={result.analyzed_signals} />
+
+          {/* Feedback & Explainable Confidence Widget */}
+          <FeedbackWidget
+            module="url_detector"
+            confidence={result.confidence}
+            scoreCalculation={result.score_calculation}
+            advisory={result.advisory_disclaimer}
+          />
         </div>
       )}
 

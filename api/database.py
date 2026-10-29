@@ -64,6 +64,18 @@ def init_db():
         )
     ''')
 
+    # Table for user detection feedback (False Positives & Useful Detections)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS scan_feedback (
+            id TEXT PRIMARY KEY,
+            module TEXT NOT NULL,
+            scan_id TEXT,
+            feedback_type TEXT NOT NULL,
+            user_note TEXT,
+            created_at TEXT NOT NULL
+        )
+    ''')
+
     conn.commit()
 
     # Seed initial sample incidents & synthetic session events if table is empty

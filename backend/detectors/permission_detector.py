@@ -1,3 +1,8 @@
+try:
+    from detectors.scoring_engine import evaluate_signal_scoring
+except ImportError:
+    from scoring_engine import evaluate_signal_scoring
+
 APP_CATEGORY_PERMISSIONS = {
     "flashlight": {
         "expected": [],
@@ -87,7 +92,7 @@ PERMISSION_DEFINITIONS = {
 def analyze_permissions(app_category: str, selected_permissions: list, source_type: str = "manual") -> dict:
     """
     Evaluates whether requested permissions align with legitimate functionality.
-    Flags excessive or malicious over-privilege.
+    Flags excessive or malicious over-privilege using transparent rule-based weighting.
     """
     category_key = (app_category or "generic_utility").lower()
     cat_info = APP_CATEGORY_PERMISSIONS.get(category_key, APP_CATEGORY_PERMISSIONS["generic_utility"])
@@ -95,6 +100,7 @@ def analyze_permissions(app_category: str, selected_permissions: list, source_ty
 
     audited_permissions = []
     excessive_permissions = []
+    detected_signals = []
     risk_score = 0
 
     for perm_key in selected_permissions:
@@ -107,15 +113,27 @@ def analyze_permissions(app_category: str, selected_permissions: list, source_ty
 
         is_necessary = perm_key in expected_perms
         if not is_necessary:
-            # Over-privileged permission
             excessive_permissions.append(perm_meta["name"])
-            risk_score += perm_meta["inherent_risk_weight"] * 1.5
+            weight = int(perm_meta["inherent_risk_weight"] * 1.5)
+            risk_score += weight
             necessity_status = "Unjustified / Excessive"
-            recommendation = f"Revoke immediately. A {category_key.replace('_', ' ')} does not reasonably require this permission to operate."
+            recommendation = f"Revoke immediately. A {category_key.replace('_', ' ')} does not reasonably require this permission."
+            detected_signals.append({
+                "id": f"unjustified_{perm_key}",
+                "name": f"Unjustified {perm_meta['name']}",
+                "category": "Over-Privilege",
+                "weight": weight,
+                "severity": "Critical" if weight >= 30 else "High",
+                "status": "detected",
+                "matched_snippet": perm_meta["name"],
+                "reason": f"Permission '{perm_meta['name']}' is unnecessary for {category_key.replace('_', ' ')}: {perm_meta['privacy_risk']}",
+                "recommendation": recommendation
+            })
         else:
-            risk_score += (perm_meta["inherent_risk_weight"] * 0.3)
+            weight = int(perm_meta["inherent_risk_weight"] * 0.3)
+            risk_score += weight
             necessity_status = "Standard / Justified"
-            recommendation = "Acceptable for core application functionality. Monitor usage in app settings."
+            recommendation = "Acceptable for core application functionality."
 
         audited_permissions.append({
             "key": perm_key,
@@ -127,17 +145,23 @@ def analyze_permissions(app_category: str, selected_permissions: list, source_ty
             "recommendation": recommendation
         })
 
-    # Normalized risk score
     normalized_score = min(int(risk_score), 100)
 
     if normalized_score >= 65:
         risk_level = "Severe Over-Privilege Risk"
+        badge_color = "red"
     elif normalized_score >= 35:
         risk_level = "Moderate Privacy Exposure"
+        badge_color = "orange"
     elif normalized_score > 0:
         risk_level = "Low Risk / Appropriate Scope"
+        badge_color = "yellow"
     else:
         risk_level = "Zero Permissions Granted"
+        badge_color = "green"
+
+    confidence_score = 95 if len(selected_permissions) > 0 else 80
+    confidence_level = "High Confidence (Deterministic Category Audit)"
 
     return {
         "app_category": category_key,
@@ -148,8 +172,21 @@ def analyze_permissions(app_category: str, selected_permissions: list, source_ty
         "excessive_count": len(excessive_permissions),
         "risk_score": normalized_score,
         "risk_level": risk_level,
+        "badge_color": badge_color,
+        "confidence": {
+            "score": confidence_score,
+            "level": confidence_level,
+            "uncertainty_note": "Assessment based on documented mobile/browser app necessity matrix."
+        },
+        "score_calculation": {
+            "method": "Deterministic Permission-to-Category Necessity Matrix",
+            "total_points": normalized_score,
+            "formula": f"Sum of Excessive Permissions Weights = {normalized_score}/100",
+            "excessive_permissions_count": len(excessive_permissions)
+        },
+        "analyzed_signals": detected_signals,
         "excessive_permissions": excessive_permissions,
         "permissions_audit": audited_permissions,
+        "advisory_disclaimer": "Notice: Heuristic permission audit flags potential over-privilege; review app settings for full control.",
         "transparency_disclaimer": "CyberShield distinguishes between manually audited app profiles and live browser permission probes. In-browser web applications cannot arbitrarily modify third-party Android/iOS system permissions without native OS settings intervention."
     }
-

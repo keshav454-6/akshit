@@ -15,6 +15,8 @@ import {
   Activity
 } from 'lucide-react';
 import ScoreGauge from '../components/ScoreGauge';
+import SignalsBreakdown from '../components/SignalsBreakdown';
+import FeedbackWidget from '../components/FeedbackWidget';
 
 const SAMPLE_LEAKS = [
   {
@@ -354,6 +356,17 @@ export default function LeakLockView() {
               </p>
             </div>
           )}
+
+          {/* Documented Signals Analysed */}
+          <SignalsBreakdown signals={result.analyzed_signals} />
+
+          {/* Feedback & Explainable Confidence Widget */}
+          <FeedbackWidget
+            module="leak_detector"
+            confidence={result.confidence}
+            scoreCalculation={result.score_calculation}
+            advisory={result.advisory_disclaimer}
+          />
         </div>
       )}
     </div>

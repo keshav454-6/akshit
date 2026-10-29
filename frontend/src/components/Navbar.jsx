@@ -36,6 +36,7 @@ export default function Navbar({ currentTab, setTab, setIsOpen, searchGlobal, se
       case 'session': return 'Account Hijacking & Session Anomaly Lab';
       case 'incidents': return 'Unified Security Incident Hub';
       case 'demo': return 'Hackathon Interactive Demo Center';
+      case 'methodology': return 'Detection Methodology & Privacy Architecture';
       default: return 'CyberShield One';
     }
   };

@@ -3,11 +3,15 @@ from urllib.parse import urlparse
 import sqlite3
 import os
 
+try:
+    from detectors.scoring_engine import evaluate_signal_scoring
+except ImportError:
+    from scoring_engine import evaluate_signal_scoring
+
 if os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
     DB_PATH = '/tmp/cybershield.db'
 else:
     DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'cybershield.db')
-
 
 POPULAR_BRANDS = [
     'google', 'paypal', 'microsoft', 'apple', 'amazon', 'facebook', 'instagram',
@@ -29,8 +33,7 @@ def analyze_url(url_input: str) -> dict:
         return {"error": "URL cannot be empty."}
 
     raw_url = url_input.strip()
-    
-    # Prepend http:// if user entered domain without protocol to parse safely
+
     target_url = raw_url
     if not re.match(r'^[a-zA-Z]+://', target_url):
         target_url = 'http://' + target_url
@@ -40,12 +43,13 @@ def analyze_url(url_input: str) -> dict:
     path = parsed.path or ''
     scheme = parsed.scheme.lower()
 
-    score = 0
+    detected_signals = []
+    analyzed_signals = []
     warning_indicators = []
     safety_recommendations = []
     lookalike_findings = []
 
-    # 0. Check Local Blocklist first
+    # 1. Check Local In-App Blocklist
     is_blocked_locally = False
     blocklist_reason = None
     try:
@@ -56,102 +60,131 @@ def analyze_url(url_input: str) -> dict:
         if row:
             is_blocked_locally = True
             blocklist_reason = row[0]
-            score = max(score, row[1])
-            warning_indicators.append(f"PREVIOUSLY BLOCKED: This domain is marked unsafe in your CyberShield In-App Blocklist ({blocklist_reason})")
+            detected_signals.append({
+                "id": "in_app_blocklist",
+                "name": "Local In-App Blocklist Match",
+                "category": "Threat Intelligence",
+                "weight": 90,
+                "severity": "Critical",
+                "status": "detected",
+                "matched_snippet": hostname,
+                "reason": f"Domain was previously blocked: {blocklist_reason}",
+                "recommendation": "Maintain block; do not visit or whitelist without administrative approval."
+            })
+            warning_indicators.append(f"PREVIOUSLY BLOCKED: Domain is in your CyberShield In-App Blocklist ({blocklist_reason})")
         conn.close()
-    except Exception as e:
+    except Exception:
         pass
 
-    # 1. HTTPS Protocol Check
+    # 2. HTTPS Protocol Security
     if scheme != 'https':
-        score += 25
+        detected_signals.append({
+            "id": "unencrypted_http",
+            "name": "Unencrypted HTTP Protocol",
+            "category": "Transport Security",
+            "weight": 25,
+            "severity": "Medium",
+            "status": "detected",
+            "matched_snippet": "http://",
+            "reason": "Traffic transmitted in plaintext without TLS/SSL encryption.",
+            "recommendation": "Never submit passwords, card details, or personal data on unencrypted sites."
+        })
         warning_indicators.append("Unencrypted connection: Uses HTTP instead of secure HTTPS")
-        safety_recommendations.append("Never submit passwords, card details, or sensitive personal data on non-HTTPS sites.")
+        safety_recommendations.append("Never submit passwords or payment details on unencrypted HTTP sites.")
     else:
-        safety_recommendations.append("HTTPS is present (traffic is encrypted, though attackers can also provision free certificates).")
+        safety_recommendations.append("HTTPS is active (traffic is encrypted in transit).")
 
-    # 2. IP Address as Hostname (e.g. http://192.168.1.50/login or http://45.33.32.156)
+    # 3. Numeric IP Address as Hostname
     ip_pattern = re.compile(r'^(\d{1,3}\.){3}\d{1,3}$')
     if ip_pattern.match(hostname):
-        score += 40
+        detected_signals.append({
+            "id": "ip_hostname",
+            "name": "Raw IP Address Hostname",
+            "category": "Domain Infrastructure",
+            "weight": 40,
+            "severity": "High",
+            "status": "detected",
+            "matched_snippet": hostname,
+            "reason": "Direct numeric IP addresses are frequently used to bypass domain reputation checks.",
+            "recommendation": "Legitimate consumer web services utilize registered brand domain names."
+        })
         warning_indicators.append(f"Raw IP address used as hostname ({hostname}) instead of registered domain name")
-        safety_recommendations.append("Legitimate consumer web services utilize registered brand domains, not bare IP addresses.")
+        safety_recommendations.append("Avoid accessing raw numeric IP hostnames.")
 
-    # 3. Suspicious or Cheap TLDs
+    # 4. Suspicious / Disposable TLDs
     tld = hostname.split('.')[-1] if '.' in hostname else ''
     if tld in SUSPICIOUS_TLDS:
-        score += 25
-        warning_indicators.append(f"High-risk Top-Level Domain (.{tld}) with high historical phishing correlation")
-        safety_recommendations.append(f"Scammers register disposable domains on .{tld} due to low cost and lack of KYC validation.")
+        detected_signals.append({
+            "id": "suspicious_tld",
+            "name": "High-Risk Disposable TLD",
+            "category": "Domain Reputation",
+            "weight": 25,
+            "severity": "Medium",
+            "status": "detected",
+            "matched_snippet": f".{tld}",
+            "reason": f"The '.{tld}' top-level domain is statistically overrepresented in low-cost malicious infrastructure.",
+            "recommendation": "Exercise elevated caution when browsing or entering information."
+        })
+        warning_indicators.append(f"Domain registered under high-risk/disposable TLD (.{tld})")
 
-    # 4. Excessive Subdomains or Nested Hostname Deception
-    # Example: login.paypal.com.customer-verification-portal.xyz
-    parts = hostname.split('.')
-    if len(parts) >= 4:
-        score += 25
-        warning_indicators.append(f"Excessive subdomains detected ({len(parts)} levels: {hostname}). Often used to mimic trusted brands.")
-        safety_recommendations.append("Examine the actual Root Domain (the last two segments before the path) to identify who actually owns the site.")
-
-    # 5. Lookalike Brand Spoofing / Typosquatting
-    # Check if a popular brand appears in a subdomain or in a hypenated fraud domain
+    # 5. Lookalike Brand Typosquatting
+    host_parts = hostname.split('.')
+    main_domain = host_parts[-2] if len(host_parts) >= 2 else hostname
     for brand in POPULAR_BRANDS:
         if brand in hostname:
-            # Check if it is the authentic domain (e.g. paypal.com or login.paypal.com)
-            is_authentic = False
-            if hostname == f"{brand}.com" or hostname.endswith(f".{brand}.com") or hostname == f"{brand}.in" or hostname.endswith(f".{brand}.in") or hostname == f"{brand}.org":
-                is_authentic = True
+            if brand not in main_domain and len(host_parts) > 2:
+                detected_signals.append({
+                    "id": "lookalike_brand",
+                    "name": f"Lookalike Spoofing: {brand.upper()}",
+                    "category": "Brand Impersonation",
+                    "weight": 40,
+                    "severity": "Critical",
+                    "status": "detected",
+                    "matched_snippet": f"{brand} inside {hostname}",
+                    "reason": f"Targeted brand '{brand.upper()}' appears as a deceptive subdomain or segment while actual parent domain is '{main_domain}'.",
+                    "recommendation": f"Verify whether this is the authentic {brand.upper()} portal ({brand}.com or official national domain)."
+                })
+                lookalike_findings.append(f"Brand spoofing: '{brand.upper()}' used in subdomain, but registered domain is '{main_domain}'")
+                warning_indicators.append(f"Deceptive Brand Masquerade: Mentions '{brand.upper()}', but registered root domain is '{main_domain}'")
 
-            if not is_authentic:
-                score += 35
-                lookalike_findings.append(f"Brand spoofing indicator: '{brand}' appears inside untrusted host '{hostname}'")
-                warning_indicators.append(f"Potential typosquatting/impersonation of '{brand.upper()}' brand")
-                safety_recommendations.append(f"This site is NOT official {brand.upper()}. It is an unauthorized third-party mimicking the brand name.")
+    # 6. Nested Subdomains
+    if len(host_parts) >= 4 and not ip_pattern.match(hostname):
+        detected_signals.append({
+            "id": "excessive_subdomains",
+            "name": "Nested Subdomain Masquerading",
+            "category": "Structural Deception",
+            "weight": 30,
+            "severity": "High",
+            "status": "detected",
+            "matched_snippet": f"{len(host_parts)} subdomain levels",
+            "reason": "Excessive subdomain chaining is a common tactic to conceal the true apex root domain.",
+            "recommendation": "Examine the root domain immediately preceding the TLD."
+        })
+        warning_indicators.append(f"Unusually complex subdomain nesting ({len(host_parts)} levels: '{hostname}')")
 
-    # 6. Suspicious characters (@ symbol, punycode, double dashes)
-    if '@' in raw_url:
-        score += 30
-        warning_indicators.append("Deceptive '@' symbol in URL: Browsers ignore anything before '@' and route to the following host")
-    if 'xn--' in hostname:
-        score += 35
-        warning_indicators.append("Punycode / Homoglyph attack: Internationalized domain name using lookalike Cyrillic/Greek characters")
-    if '--' in hostname:
-        score += 15
-        warning_indicators.append("Double hyphen '--' detected in domain name, common in spoofing domains")
+    eval_res = evaluate_signal_scoring("url_detector", raw_url, detected_signals)
 
-    # 7. Phishing keywords in path or query
-    phish_keywords = ['login', 'signin', 'verify', 'account', 'banking', 'secure', 'update', 'password', 'wallet', 'kyc']
-    keyword_matches = [k for k in phish_keywords if k in path.lower() or k in hostname]
-    if keyword_matches and score > 20:
-        score += 15
-        warning_indicators.append(f"Phishing-associated keywords detected in URL path: {', '.join(keyword_matches[:3])}")
-
-    risk_score = min(score, 100)
-
-    if is_blocked_locally:
-        risk_level = "Blocked (Local Shield)"
-    elif risk_score >= 70:
-        risk_level = "High Risk / Hazardous"
-    elif risk_score >= 40:
-        risk_level = "Suspicious URL"
-    elif risk_score >= 20:
-        risk_level = "Moderate Caution"
-    else:
-        risk_level = "Low Risk / Standard"
-        if not warning_indicators:
-            warning_indicators.append("No active heuristic threat patterns found.")
-            safety_recommendations.append("Domain follows standard naming conventions and standard TLS practices.")
+    if not warning_indicators:
+        warning_indicators.append("No typical deceptive typosquatting, raw IP, or high-risk TLDs detected.")
+        safety_recommendations.append("The domain structure conforms to standard web conventions.")
 
     return {
-        "input_url": raw_url,
-        "normalized_url": target_url,
+        "url": raw_url,
         "hostname": hostname,
-        "scheme": scheme.upper(),
-        "is_https": scheme == 'https',
-        "risk_score": risk_score,
-        "risk_level": risk_level,
+        "scheme": scheme,
         "is_blocked_locally": is_blocked_locally,
+        "blocklist_reason": blocklist_reason,
+        "risk_score": eval_res["risk_score"],
+        "risk_level": eval_res["risk_level"],
+        "badge_color": eval_res["badge_color"],
+        "is_ambiguous": eval_res["is_ambiguous"],
+        "ambiguity_reason": eval_res["ambiguity_reason"],
+        "confidence": eval_res["confidence"],
+        "score_calculation": eval_res["score_calculation"],
+        "analyzed_signals": detected_signals,
         "warning_indicators": warning_indicators,
+        "safety_recommendations": safety_recommendations,
         "lookalike_findings": lookalike_findings,
-        "safety_recommendations": safety_recommendations
+        "advisory_disclaimer": eval_res["advisory_disclaimer"],
+        "privacy_notice": eval_res["privacy_notice"]
     }
-

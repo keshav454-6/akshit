@@ -1,113 +1,147 @@
 import re
+try:
+    from detectors.scoring_engine import evaluate_signal_scoring
+except ImportError:
+    from scoring_engine import evaluate_signal_scoring
 
 def analyze_impersonation(text: str) -> dict:
     """
     Detects targeted impersonation of financial institutions, law enforcement,
-    delivery companies, tech giants, and close personal contacts.
-    Provides verifiable official counter-measures.
+    delivery companies, tech platforms, and close personal contacts.
+    Provides explainable rule-based scoring and verifiable official counter-measures.
     """
     if not text or not text.strip():
         return {"error": "Message text is required for impersonation analysis."}
 
     cleaned = text.strip()
-    score = 0
+
+    signals_definition = [
+        {
+            "id": "digital_arrest_law",
+            "name": "Law Enforcement / Digital Arrest Coercion",
+            "category": "State Authority Impersonation",
+            "weight": 45,
+            "severity": "Critical",
+            "regex": re.compile(r'\b(cbi|police|cyber cell|enforcement directorate|ed|customs|narcotics control bureau|ncb|court order|arrest warrant|supreme court|digital arrest|inspector|sub-inspector)\b', re.IGNORECASE),
+            "reason": "The 'Digital Arrest' scam poses as police/CBI on Skype/WhatsApp falsely claiming illegal parcels or money laundering.",
+            "recommendation": "Indian law enforcement NEVER conducts arrests over video calls or demands money deposits. Call Cyber Crime Helpline: 1930."
+        },
+        {
+            "id": "bank_authority",
+            "name": "Central Bank / Bank Official Impersonation",
+            "category": "Financial Authority Impersonation",
+            "weight": 35,
+            "severity": "High",
+            "regex": re.compile(r'\b(rbi|reserve bank|sbi|state bank|hdfc|icici|axis bank|punjab national bank|pnb|bank manager|kyc officer|compliance department)\b', re.IGNORECASE),
+            "reason": "Banks will never contact customers via unverified mobile numbers or messaging apps to update credentials.",
+            "recommendation": "Call the customer care number printed on the back of your physical ATM/Debit card, or visit your branch."
+        },
+        {
+            "id": "courier_narcotics",
+            "name": "Contraband Courier & Customs Pretext",
+            "category": "Logistics & Customs Impersonation",
+            "weight": 30,
+            "severity": "High",
+            "regex": re.compile(r'\b(fedex|dhl|india post|bluedart|delhivery|parcel|courier|consignment|customs|contraband|narcotics|passports?|package)\b', re.IGNORECASE),
+            "reason": "Tricks victims into believing a package with contraband was booked in their name, escalating to a fake police transfer.",
+            "recommendation": "Track tracking numbers solely on official courier portals (e.g. fedex.com). Never call numbers in unsolicited SMS."
+        },
+        {
+            "id": "family_emergency",
+            "name": "Friend / Family Distress (Mom/Grandparent Scam)",
+            "category": "Relationship Impersonation",
+            "weight": 40,
+            "severity": "Critical",
+            "regex": re.compile(r'\b(hi mom|hi dad|hello mom|hello dad|lost my phone|new number|friend\'s phone|in hospital|met with an accident|emergency cash|send money urgently)\b', re.IGNORECASE),
+            "reason": "Emotional manipulation where scammers pretend to be a son, daughter, or grandchild who lost their phone and urgently needs money.",
+            "recommendation": "Directly call the family member's known existing phone number or mutual relatives before sending funds."
+        },
+        {
+            "id": "tech_support",
+            "name": "Tech Platform / Corporate Support Impersonation",
+            "category": "Enterprise / Tech Impersonation",
+            "weight": 30,
+            "severity": "High",
+            "regex": re.compile(r'\b(microsoft support|windows security|apple support|google accounts team|it administrator|helpdesk department|hr payroll|payroll update)\b', re.IGNORECASE),
+            "reason": "Claims computer has a virus or corporate credentials need updating to obtain remote desktop access.",
+            "recommendation": "Contact your corporate IT team directly or visit official platform account portals directly."
+        },
+        {
+            "id": "extreme_coercion",
+            "name": "Digital Arrest Summons / Extreme Secrecy Coercion",
+            "category": "Coercion & Isolation",
+            "weight": 20,
+            "severity": "High",
+            "regex": re.compile(r'\b(warrant|lawsuit|legal penalty|jail|confidential|do not tell anyone|keep secret|skype|digital arrest|bail|summons)\b', re.IGNORECASE),
+            "reason": "Aggressive intimidation insisting on secrecy to prevent victims from consulting trusted advisors or authorities.",
+            "recommendation": "Do not remain isolated. Seek immediate counsel from family, legal advisors, or call 1930."
+        }
+    ]
+
+    detected_signals = []
+    analyzed_signals = []
     impersonated_entities = []
     indicators = []
     explanations = []
     verification_guide = []
 
-    # 1. Government / Law Enforcement / Digital Arrest Impersonation
-    gov_regex = re.compile(
-        r'\b(cbi|police|cyber cell|enforcement directorate|ed|customs|narcotics control bureau|ncb|court order|arrest warrant|supreme court|digital arrest|inspector|sub-inspector)\b',
-        re.IGNORECASE
-    )
-    gov_match = gov_regex.findall(cleaned)
-    if gov_match:
-        score += 45
-        entities = list(set([m.upper() for m in gov_match]))
-        impersonated_entities.append(f"Law Enforcement / Judicial Authority ({', '.join(entities)})")
-        indicators.append("Claims to represent police, CBI, customs, or court authorities")
-        explanations.append("The 'Digital Arrest' scam is a widespread organized racket. Fraudsters pose as police/CBI on Skype/WhatsApp and falsely claim an illegal parcel or money laundering case in your name.")
-        verification_guide.append("Indian law enforcement NEVER conducts trials over Skype/WhatsApp or demands security deposits to dismiss cases. Disconnect and report immediately to cybercrime.gov.in (Helpline: 1930).")
+    for sig in signals_definition:
+        match = sig["regex"].findall(cleaned)
+        if match:
+            unique_matches = list(set([str(m).upper() for m in match]))
+            snippet = ", ".join(unique_matches[:2])
+            entry = {
+                "id": sig["id"],
+                "name": sig["name"],
+                "category": sig["category"],
+                "weight": sig["weight"],
+                "severity": sig["severity"],
+                "status": "detected",
+                "matched_snippet": snippet,
+                "reason": sig["reason"],
+                "recommendation": sig["recommendation"]
+            }
+            detected_signals.append(entry)
+            analyzed_signals.append(entry)
 
-    # 2. Banking / Central Bank (RBI) Impersonation
-    bank_regex = re.compile(
-        r'\b(rbi|reserve bank|sbi|state bank|hdfc|icici|axis bank|punjab national bank|pnb|bank manager|kyc officer|compliance department)\b',
-        re.IGNORECASE
-    )
-    bank_match = bank_regex.findall(cleaned)
-    if bank_match:
-        score += 35
-        entities = list(set([m.upper() for m in bank_match]))
-        impersonated_entities.append(f"Banking Institution / Regulatory Body ({', '.join(entities)})")
-        indicators.append("Claims to originate from bank management, KYC department, or RBI")
-        explanations.append("Banks will never contact customers via unverified mobile numbers or messaging apps to update personal banking records or credentials.")
-        verification_guide.append("Call the customer care number printed on the back of your physical ATM/Debit card, or visit your local branch in person.")
+            impersonated_entities.append(f"{sig['name']} ({snippet})")
+            indicators.append(f"{sig['name']}: {snippet}")
+            explanations.append(sig["reason"])
+            verification_guide.append(sig["recommendation"])
+        else:
+            analyzed_signals.append({
+                "id": sig["id"],
+                "name": sig["name"],
+                "category": sig["category"],
+                "weight": sig["weight"],
+                "severity": sig["severity"],
+                "status": "clean",
+                "matched_snippet": None,
+                "reason": sig["reason"],
+                "recommendation": sig["recommendation"]
+            })
 
-    # 3. Delivery / Courier Services (FedEx / India Post / DHL / BlueDart)
-    courier_regex = re.compile(
-        r'\b(fedex|dhl|india post|bluedart|delhivery|parcel|courier|consignment|customs|contraband|narcotics|passports?|package)\b',
-        re.IGNORECASE
-    )
-    courier_match = courier_regex.findall(cleaned)
-    if courier_match:
-        score += 30
-        entities = list(set([m.upper() for m in courier_match]))
-        impersonated_entities.append(f"Courier / Intercepted Consignment ({', '.join(entities[:3])})")
-        indicators.append("Claims a high-value or intercepted parcel has been held or contains illegal goods")
-        explanations.append("Courier scams trick people into believing a package containing passports or narcotics was booked using their Aadhaar/ID, escalating to a fake police transfer.")
-        verification_guide.append("Track tracking numbers solely on the official courier portal (e.g. fedex.com or indiapost.gov.in). Never call phone numbers provided in unsolicited SMS.")
+    eval_res = evaluate_signal_scoring("impersonation_detector", cleaned, detected_signals)
 
-    # 4. Friends, Family, or Colleague Emergency ("Grandparent / Mom Scam")
-    relative_regex = re.compile(
-        r'\b(hi mom|hi dad|hello mom|hello dad|lost my phone|new number|friend\'s phone|in hospital|met with an accident|emergency cash|send money urgently)\b',
-        re.IGNORECASE
-    )
-    if relative_regex.search(cleaned):
-        score += 40
-        impersonated_entities.append("Family Member or Close Friend in Distress")
-        indicators.append("Claims to be a close relative who changed numbers due to an urgent emergency")
-        explanations.append("This is an emotional blackmail vector where scammers pretend to be a son, daughter, or grandchild who lost their phone and urgently needs medical or bail money.")
-        verification_guide.append("Directly call the family member's known existing phone number, or reach another mutual family member to confirm before sending any money.")
-
-    # 5. Tech Support / Corporate IT / Helpdesk Impersonation
-    tech_regex = re.compile(
-        r'\b(microsoft support|windows security|apple support|google accounts team|it administrator|helpdesk department|hr payroll|payroll update)\b',
-        re.IGNORECASE
-    )
-    tech_match = tech_regex.findall(cleaned)
-    if tech_match:
-        score += 30
-        impersonated_entities.append(f"Tech Platform / Corporate Support ({', '.join(set([m.title() for m in tech_match]))})")
-        indicators.append("Claims your computer has a virus or that corporate payroll/credentials need updating")
-        explanations.append("Tech companies do not proactively send unsolicited messages or popups with phone numbers instructing users to call for virus removal.")
-        verification_guide.append("Contact your internal IT helpdesk directly via corporate intranet or navigate to the official vendor account portal directly.")
-
-    # Additional Urgency / Coercion / Digital Arrest factor
-    coercion = re.search(r'\b(warrant|lawsuit|legal penalty|jail|confidential|do not tell anyone|keep secret|skype|digital arrest|bail|summons)\b', cleaned, re.IGNORECASE)
-    if coercion:
-        score += 20
-        indicators.append("Extreme coercion tactics, Digital Arrest summons, or insistence on strict secrecy")
-
-    risk_score = min(score, 100)
-
-    if risk_score >= 65:
-        risk_level = "High-Confidence Impersonation"
-    elif risk_score >= 35:
-        risk_level = "Suspicious Profile / Potential Impersonation"
-    elif risk_score > 0:
-        risk_level = "Mild Impersonation Indicators"
-    else:
-        risk_level = "No Impersonation Detected"
-        indicators.append("No typical institutional or familial pretexting phrases detected.")
-        verification_guide.append("Ensure sender's caller ID or email domain matches verified corporate contact directories.")
+    if not indicators and not eval_res["is_ambiguous"]:
+        indicators.append("No typical brand, government, or high-coercion impersonation cues found.")
+        verification_guide.append("Verify the identity of anyone demanding sensitive data through an independent channel.")
 
     return {
         "text_preview": cleaned[:120] + ("..." if len(cleaned) > 120 else ""),
-        "risk_score": risk_score,
-        "risk_level": risk_level,
-        "impersonated_entities": impersonated_entities if impersonated_entities else ["None Detected"],
+        "risk_score": eval_res["risk_score"],
+        "risk_level": eval_res["risk_level"],
+        "badge_color": eval_res["badge_color"],
+        "is_ambiguous": eval_res["is_ambiguous"],
+        "ambiguity_reason": eval_res["ambiguity_reason"],
+        "confidence": eval_res["confidence"],
+        "score_calculation": eval_res["score_calculation"],
+        "analyzed_signals": analyzed_signals,
+        "impersonated_entities": impersonated_entities,
         "warning_indicators": indicators,
-        "threat_explanations": explanations,
-        "official_verification_steps": verification_guide
+        "explanations": explanations,
+        "verification_guide": verification_guide,
+        "official_verification_steps": verification_guide,
+        "advisory_disclaimer": eval_res["advisory_disclaimer"],
+        "privacy_notice": eval_res["privacy_notice"]
     }

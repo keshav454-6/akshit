@@ -16,6 +16,7 @@ import VoiceCloneView from './views/VoiceCloneView';
 import SessionLabView from './views/SessionLabView';
 import IncidentHubView from './views/IncidentHubView';
 import DemoCenterView from './views/DemoCenterView';
+import MethodologyView from './views/MethodologyView';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -47,6 +48,8 @@ export default function App() {
         return <IncidentHubView />;
       case 'demo':
         return <DemoCenterView setTab={setCurrentTab} />;
+      case 'methodology':
+        return <MethodologyView />;
       default:
         return <DashboardView setTab={setCurrentTab} setIsDownloadOpen={setIsDownloadOpen} />;
     }

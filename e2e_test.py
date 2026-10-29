@@ -13,9 +13,16 @@ def make_req(endpoint, data=None, method="GET"):
     if data is not None:
         body = json.dumps(data).encode('utf-8')
         req.data = body
-    with urllib.request.urlopen(req, timeout=5) as resp:
-        content = resp.read().decode('utf-8')
-        return resp.status, json.loads(content) if resp.headers.get_content_type() == 'application/json' else content
+    try:
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            content = resp.read().decode('utf-8')
+            return resp.status, json.loads(content) if resp.headers.get_content_type() == 'application/json' else content
+    except urllib.error.HTTPError as e:
+        content = e.read().decode('utf-8')
+        try:
+            return e.code, json.loads(content)
+        except Exception:
+            return e.code, content
 
 def run_tests():
     print("==================================================")

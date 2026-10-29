@@ -1,0 +1,406 @@
+{
+  "version": "1.2.0-evaluation",
+  "scoring_model": {
+    "type": "Transparent Configurable Rule-Based Heuristic Sum",
+    "description": "Each detected indicator contributes an explicit weighted integer score. The aggregate is normalized to 0-100 without black-box ML or opaque embeddings.",
+    "risk_thresholds": {
+      "critical": 70,
+      "high": 40,
+      "medium": 20,
+      "low": 0
+    }
+  },
+  "modules": {
+    "scam_detector": {
+      "name": "Scam & Customer-Care Detector",
+      "ambiguity_threshold": {
+        "min_characters": 15,
+        "min_words": 3
+      },
+      "signals": [
+        {
+          "id": "credential_phishing",
+          "name": "Credential & Auth Secret Harvesting",
+          "category": "Authentication Secret",
+          "weight": 35,
+          "severity": "Critical",
+          "pattern": "\\b(otp|one time password|pin|mpin|cvv|expiry date|netbanking password|passcode|card number)\\b",
+          "reason": "Legitimate institutions, banks, and customer care executives never request OTPs, PINs, or passwords.",
+          "recommendation": "Never disclose OTP, PIN, or CVV. Terminate contact immediately."
+        },
+        {
+          "id": "blocking_threat",
+          "name": "Account Blocking & Panicking Threat",
+          "category": "Coercion & Intimidation",
+          "weight": 25,
+          "severity": "High",
+          "pattern": "\\b(block|blocked|suspend|suspended|deactivate|freeze|frozen|terminated|hold|legal action|police complaint|arrest)\\b",
+          "reason": "Scammers fabricate imminent penalties to provoke emotional panic and prevent rational verification.",
+          "recommendation": "Do not panic. Formal bank notices are served via written communications, not urgent chat/SMS."
+        },
+        {
+          "id": "urgency_pressure",
+          "name": "Manufactured Time-Pressure Deadline",
+          "category": "Psychological Manipulation",
+          "weight": 20,
+          "severity": "Medium",
+          "pattern": "\\b(immediate|immediately|urgent|urgently|within \\d+ hours?|within 24 hours?|within 10 minutes?|today only|last chance|action required)\\b",
+          "reason": "Artificial urgency short-circuits critical thinking and forces victims into impulsive decisions.",
+          "recommendation": "Pause and verify independently. Genuine administrative matters allow ample response time."
+        },
+        {
+          "id": "authority_impersonation",
+          "name": "Customer Care & Service Authority Pretext",
+          "category": "Pretexting",
+          "weight": 15,
+          "severity": "Medium",
+          "pattern": "\\b(customer care|support desk|helpdesk|service executive|officer|sbi support|hdfc care|airtel kyc|jio 5g|electricity board|customs officer|courier officer)\\b",
+          "reason": "Impersonating recognizable utility or telecom brands builds deceptive credibility.",
+          "recommendation": "Contact the service provider through official directory helplines only."
+        },
+        {
+          "id": "suspicious_links_remote",
+          "name": "Unverified URLs & Screen-Sharing Tools",
+          "category": "Technical Vector",
+          "weight": 30,
+          "severity": "Critical",
+          "pattern": "(https?://[^\\s]+|bit\\.ly/[^\\s]+|tinyurl\\.com/[^\\s]+|t\\.me/[^\\s]+|\\.apk|\\banydesk\\b|\\brustdesk\\b|\\bteamviewer\\b|\\bquicksupport\\b)",
+          "reason": "Shortened links or remote desktop software allow fraudsters to siphon OTPs or control the device.",
+          "recommendation": "Never install remote desktop software or APKs at the request of an unsolicited contact."
+        },
+        {
+          "id": "bait_pretext",
+          "name": "Routine Task / Lottery / KYC Baits",
+          "category": "Social Engineering Baits",
+          "weight": 20,
+          "severity": "Medium",
+          "pattern": "\\b(kyc update|kyc pending|pan card update|electricity bill update|lottery winner|lucky draw|cash prize|won \\d+|reward points?)\\b",
+          "reason": "Exploits routine obligations (KYC, electricity) or financial greed (lottery) as lure.",
+          "recommendation": "Check KYC or billing status directly on the official banking or utility web portal."
+        }
+      ]
+    },
+    "payment_detector": {
+      "name": "Suspicious Payment Request Shield",
+      "ambiguity_threshold": {
+        "min_characters": 12,
+        "min_words": 2
+      },
+      "signals": [
+        {
+          "id": "reverse_upi_pin",
+          "name": "Reverse UPI PIN Entry Request",
+          "category": "Financial Authorization Trap",
+          "weight": 45,
+          "severity": "Critical",
+          "pattern": "\\b(enter\\s+(?:upi\\s+)?pin\\s+(?:to|for)\\s+(?:receive|claim|credit|accept|get))\\b",
+          "reason": "Fundamental UPI Rule: Entering your UPI PIN always DEBITS funds from your account, never credits it.",
+          "recommendation": "Do not enter your UPI PIN. Receiving money on UPI requires zero authorization or PIN entry."
+        },
+        {
+          "id": "qr_receive_trap",
+          "name": "QR Code Scanning to Receive Money Claim",
+          "category": "Financial Authorization Trap",
+          "weight": 35,
+          "severity": "Critical",
+          "pattern": "\\b(scan\\s+(?:this\\s+)?qr\\s+(?:code\\s+)?(?:to|and)\\s+(?:receive|get|claim|credit|refund))\\b",
+          "reason": "Scanning a QR code in a payment app initiates a payment transfer OUT of your bank account.",
+          "recommendation": "Never scan a QR code provided by a buyer or caller claiming to send you money or refunds."
+        },
+        {
+          "id": "collect_request_trap",
+          "name": "UPI Collect Request Approval Trap",
+          "category": "Payment Approval Deception",
+          "weight": 30,
+          "severity": "High",
+          "pattern": "\\b(approve\\s+(?:the\\s+)?(?:request|payment|debit)|accept\\s+request|click\\s+pay\\s+to\\s+receive)\\b",
+          "reason": "Scammers send UPI Collect Requests for arbitrary amounts instructing victims to approve them to receive funds.",
+          "recommendation": "Decline unexpected Collect Requests and verify sender VPA."
+        },
+        {
+          "id": "mistaken_refund_pressure",
+          "name": "Accidental Transfer & Fake Refund Pretext",
+          "category": "Psychological Manipulation",
+          "weight": 25,
+          "severity": "High",
+          "pattern": "\\b(refund|transferred by mistake|sent money by mistake|return excess|overpaid|cashback reward|claim reward)\\b",
+          "reason": "Claims of accidental money transfers push victims to return funds before checking bank balance.",
+          "recommendation": "Log into your official banking app and verify your actual ledger statement before responding."
+        },
+        {
+          "id": "financial_urgency",
+          "name": "Payment Window Countdown Pressure",
+          "category": "Time Pressure",
+          "weight": 15,
+          "severity": "Medium",
+          "pattern": "\\b(expire\\s+in|valid\\s+for\\s+\\d+|within\\s+\\d+\\s+min|immediate|urgent|right\\s+now)\\b",
+          "reason": "Artificial deadlines impede independent consultation with banks or family.",
+          "recommendation": "Take time to verify recipient credentials through authentic banking records."
+        }
+      ]
+    },
+    "impersonation_detector": {
+      "name": "Multi-Entity Impersonation Detector",
+      "ambiguity_threshold": {
+        "min_characters": 15,
+        "min_words": 3
+      },
+      "signals": [
+        {
+          "id": "digital_arrest_law",
+          "name": "Law Enforcement / Digital Arrest Coercion",
+          "category": "State Authority Impersonation",
+          "weight": 45,
+          "severity": "Critical",
+          "pattern": "\\b(cbi|police|cyber cell|enforcement directorate|ed|customs|narcotics control bureau|ncb|court order|arrest warrant|supreme court|digital arrest|inspector|sub-inspector)\\b",
+          "reason": "No Indian judicial or police agency conducts arrests or trials over Skype/WhatsApp or demands online bail deposits.",
+          "recommendation": "Disconnect immediately and report to the National Cyber Crime Helpline at 1930."
+        },
+        {
+          "id": "bank_authority",
+          "name": "Central Bank / Bank Official Impersonation",
+          "category": "Financial Authority Impersonation",
+          "weight": 35,
+          "severity": "High",
+          "pattern": "\\b(rbi|reserve bank|sbi|state bank|hdfc|icici|axis bank|punjab national bank|pnb|bank manager|kyc officer|compliance department)\\b",
+          "reason": "Banks never reach out via personal messaging to demand credential or account verification.",
+          "recommendation": "Call the verified customer helpline on the back of your debit card or visit your branch."
+        },
+        {
+          "id": "courier_narcotics",
+          "name": "Contraband Courier & Customs Pretext",
+          "category": "Logistics & Customs Impersonation",
+          "weight": 30,
+          "severity": "High",
+          "pattern": "\\b(fedex|dhl|india post|bluedart|delhivery|parcel|courier|consignment|customs|contraband|narcotics|passports?|package)\\b",
+          "reason": "Fraudsters claim packages containing contraband were booked in your name to induce terror and extract extortion payments.",
+          "recommendation": "Verify consignments solely on the carrier's official website using your tracking number."
+        },
+        {
+          "id": "family_emergency",
+          "name": "Friend / Family Distress (Mom/Grandparent Scam)",
+          "category": "Relationship Impersonation",
+          "weight": 40,
+          "severity": "Critical",
+          "pattern": "\\b(hi mom|hi dad|hello mom|hello dad|lost my phone|new number|friend's phone|in hospital|met with an accident|emergency cash|send money urgently)\\b",
+          "reason": "Exploits parental care by impersonating a child who lost their phone and desperately requires money.",
+          "recommendation": "Call the known existing phone number or confirm with mutual relatives before sending funds."
+        }
+      ]
+    },
+    "url_detector": {
+      "name": "Fake Website Risk Analyzer & Blocklist",
+      "signals": [
+        {
+          "id": "in_app_blocklist",
+          "name": "Local In-App Blocklist Match",
+          "category": "Blocklist Threat Intelligence",
+          "weight": 90,
+          "severity": "Critical",
+          "reason": "This domain was previously verified as hazardous and blacklisted by your security administrator.",
+          "recommendation": "Access to this website should remain blocked."
+        },
+        {
+          "id": "unencrypted_http",
+          "name": "Unencrypted HTTP Protocol",
+          "category": "Transport Security",
+          "weight": 25,
+          "severity": "Medium",
+          "reason": "Traffic transmitted in plaintext without TLS/SSL encryption is subject to eavesdropping or tampering.",
+          "recommendation": "Never enter credentials or payment data on non-HTTPS portals."
+        },
+        {
+          "id": "ip_hostname",
+          "name": "Raw IP Address Hostname",
+          "category": "Domain Infrastructure",
+          "weight": 40,
+          "severity": "High",
+          "reason": "Direct numeric IP addresses are frequently utilized by botnets and disposable phishing servers.",
+          "recommendation": "Legitimate organizations utilize registered brand domain names."
+        },
+        {
+          "id": "suspicious_tld",
+          "name": "High-Risk Disposable TLD",
+          "category": "Domain Reputation",
+          "weight": 25,
+          "severity": "Medium",
+          "reason": "Certain cheap or free top-level domains are statistically overrepresented in spam and phishing campaigns.",
+          "recommendation": "Exercise elevated caution when submitting data on uncommon TLDs."
+        },
+        {
+          "id": "lookalike_brand",
+          "name": "Targeted Brand Spoofing / Typosquatting",
+          "category": "Brand Impersonation",
+          "weight": 40,
+          "severity": "Critical",
+          "reason": "Contains known brand identifiers (SBI, HDFC, Google, PayPal) embedded within unauthorized domains.",
+          "recommendation": "Ensure the primary registered domain matches the official corporate identity."
+        },
+        {
+          "id": "excessive_subdomains",
+          "name": "Nested Subdomain Masquerading",
+          "category": "Structural Deception",
+          "weight": 30,
+          "severity": "High",
+          "reason": "Attackers chain multiple subdomains (e.g. sbi.bank.login.portal...) to mimic authentic hostnames.",
+          "recommendation": "Inspect the root domain immediately preceding the TLD."
+        }
+      ]
+    },
+    "leak_detector": {
+      "name": "Leak Lock Secrets Scanner",
+      "privacy_policy": "Zero-Knowledge Local Processing: Text is evaluated strictly in-memory. Secrets are masked deterministically. Raw keys are never stored in databases or exported.",
+      "signals": [
+        {
+          "id": "aws_keys",
+          "name": "Cloud Provider Credentials (AWS/GCP)",
+          "category": "Cloud Infrastructure Secret",
+          "weight": 40,
+          "severity": "Critical",
+          "reason": "Hardcoded cloud keys permit unauthorized infrastructure provisioning and sensitive data extraction.",
+          "recommendation": "Revoke key via cloud console, rotate credentials, and store in environment variables."
+        },
+        {
+          "id": "llm_tokens",
+          "name": "AI Model & SaaS API Tokens (OpenAI/Anthropic)",
+          "category": "SaaS Platform Secret",
+          "weight": 35,
+          "severity": "Critical",
+          "reason": "Exposed LLM tokens lead to API quota exhaustion and unauthorized model access.",
+          "recommendation": "Revoke token on developer dashboard and monitor billing telemetry."
+        },
+        {
+          "id": "git_tokens",
+          "name": "Code Repository Tokens (GitHub PAT)",
+          "category": "Source Control Secret",
+          "weight": 40,
+          "severity": "Critical",
+          "reason": "Personal access tokens allow direct read/write access to proprietary source repositories.",
+          "recommendation": "Revoke token from Developer Settings and regenerate with minimal scopes."
+        },
+        {
+          "id": "db_uris",
+          "name": "Database Connection Strings with Credentials",
+          "category": "Data Layer Secret",
+          "weight": 40,
+          "severity": "Critical",
+          "reason": "Exposed URIs provide immediate remote database access bypassing network boundaries.",
+          "recommendation": "Rotate database user password and restrict connections to trusted VPC CIDRs."
+        },
+        {
+          "id": "private_keys",
+          "name": "Cryptographic Private Keys (RSA/SSH)",
+          "category": "Cryptographic Material",
+          "weight": 45,
+          "severity": "Critical",
+          "reason": "Exposed private keys compromise server SSH authentication and TLS certificate integrity.",
+          "recommendation": "Remove public key from authorized_keys files immediately and generate a new keypair."
+        }
+      ]
+    },
+    "permission_detector": {
+      "name": "Permission Lens App Auditor",
+      "signals": [
+        {
+          "id": "unjustified_camera_mic",
+          "name": "Unjustified Camera or Microphone Access",
+          "category": "Surveillance Risk",
+          "weight": 35,
+          "severity": "Critical",
+          "reason": "Utility apps (e.g. flashlight, calculator) have no technical necessity for recording audio or capturing video.",
+          "recommendation": "Revoke permission in App Settings or switch to a reputable alternative."
+        },
+        {
+          "id": "unjustified_location_contacts",
+          "name": "Unjustified Contacts or GPS Location Access",
+          "category": "Privacy Profiling Risk",
+          "weight": 30,
+          "severity": "High",
+          "reason": "Contacts books and real-time physical locations are frequently harvested by predatory adware and loan apps.",
+          "recommendation": "Deny contacts and location permissions for non-navigation utility software."
+        },
+        {
+          "id": "background_telemetry",
+          "name": "Excessive Background Execution Permissions",
+          "category": "Telemetry Risk",
+          "weight": 20,
+          "severity": "Medium",
+          "reason": "Permits silent execution when app is closed, leading to unmonitored data collection.",
+          "recommendation": "Restrict background execution to apps requiring active background sync."
+        }
+      ]
+    },
+    "voice_detector": {
+      "name": "Voice-Clone Scam Guard",
+      "signals": [
+        {
+          "id": "familiar_voice_money",
+          "name": "Urgent Money Request from Purportedly Known Voice",
+          "category": "Impersonated Voice Vector",
+          "weight": 25,
+          "severity": "Critical"
+        },
+        {
+          "id": "emotional_emergency",
+          "name": "Extreme Emotional Emergency Pretext",
+          "category": "Psychological Manipulation",
+          "weight": 20,
+          "severity": "High"
+        },
+        {
+          "id": "demand_secrecy",
+          "name": "Demand for Total Secrecy / Non-Disclosure",
+          "category": "Isolation Tactic",
+          "weight": 20,
+          "severity": "High"
+        },
+        {
+          "id": "refuses_video_verify",
+          "name": "Refusal / Evasion of Secondary Visual Verification",
+          "category": "Verification Evasion",
+          "weight": 20,
+          "severity": "High"
+        },
+        {
+          "id": "unusual_channel_or_number",
+          "name": "Call from Unrecognized Number Claiming to be Known",
+          "category": "Channel Anomaly",
+          "weight": 15,
+          "severity": "Medium"
+        },
+        {
+          "id": "strange_speech_artifacts",
+          "name": "Synthetic Cadence / Acoustic Artifacts",
+          "category": "Audio Acoustic Clue",
+          "weight": 15,
+          "severity": "Medium"
+        }
+      ]
+    },
+    "session_detector": {
+      "name": "Account Hijacking & Session Anomaly Lab",
+      "simulation_notice": "Security Simulation: All events are synthetic demonstrations for defensive training and evaluation.",
+      "signals": [
+        {
+          "id": "impossible_travel",
+          "name": "Impossible Travel Velocity",
+          "category": "Geographic Anomaly",
+          "weight": 85,
+          "severity": "Critical",
+          "reason": "Logins from physically distant regions within minutes indicate credential theft or proxy tunneling.",
+          "recommendation": "Invalidate active session and force password change with MFA."
+        },
+        {
+          "id": "credential_stuffing",
+          "name": "Automated Credential Stuffing Pattern",
+          "category": "Authentication Anomaly",
+          "weight": 75,
+          "severity": "High",
+          "reason": "Rapid sequence of failed attempts followed by immediate privilege escalation.",
+          "recommendation": "Enforce IP rate-limiting and temporary account lockout."
+        }
+      ]
+    }
+  }
+}
+

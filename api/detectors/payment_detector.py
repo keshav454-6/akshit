@@ -1,101 +1,156 @@
 import re
+try:
+    from detectors.scoring_engine import evaluate_signal_scoring
+except ImportError:
+    from scoring_engine import evaluate_signal_scoring
 
 def analyze_payment_request(text: str) -> dict:
     """
     Evaluates payment claims, UPI messages, QR codes, refund pretexts,
     and requests to approve collect requests or enter authentication PINs.
-    Follows a cautious, explainable evaluation standard without making
-    unsubstantiated definitive claims.
+    Follows a transparent rule-based scoring architecture with confidence metrics.
     """
     if not text or not text.strip():
         return {"error": "Payment message text is required."}
 
     cleaned = text.strip()
-    score = 0
+
+    signals_definition = [
+        {
+            "id": "reverse_upi_pin",
+            "name": "Reverse UPI PIN Entry Request",
+            "category": "Financial Authorization Trap",
+            "weight": 45,
+            "severity": "Critical",
+            "regex": re.compile(r'\b(enter\s+(?:upi\s+)?pin\s+(?:to|for)\s+(?:receive|claim|credit|accept|get))\b', re.IGNORECASE),
+            "reason": "Fundamental UPI Rule: Entering your UPI PIN strictly DEBITS funds from your account, never credits it.",
+            "recommendation": "DO NOT enter your PIN. Receiving funds via UPI requires ZERO authorization or PIN entry."
+        },
+        {
+            "id": "qr_receive_trap",
+            "name": "QR Code Scanning to Receive Money Claim",
+            "category": "Financial Authorization Trap",
+            "weight": 35,
+            "severity": "Critical",
+            "regex": re.compile(r'\b(scan\s+(?:this\s+)?qr\s+(?:code\s+)?(?:to|and)\s+(?:receive|get|claim|credit|refund))\b', re.IGNORECASE),
+            "reason": "Scanning a QR code in any UPI application initiates a PAY/TRANSFER operation OUT of your account.",
+            "recommendation": "Never scan a QR code sent by a buyer or unknown contact claiming advance payment."
+        },
+        {
+            "id": "collect_request_trap",
+            "name": "UPI Collect Request Approval Trap",
+            "category": "Payment Approval Deception",
+            "weight": 30,
+            "severity": "High",
+            "regex": re.compile(r'\b(approve\s+(?:the\s+)?(?:request|payment|debit)|accept\s+request|click\s+pay\s+to\s+receive)\b', re.IGNORECASE),
+            "reason": "Scammers send UPI Collect Requests instructing victims to press 'Approve' to receive cashback or lottery funds.",
+            "recommendation": "Decline unexpected UPI Collect Requests immediately. Verify sender VPA."
+        },
+        {
+            "id": "mistaken_refund_pressure",
+            "name": "Accidental Transfer & Fake Refund Pretext",
+            "category": "Psychological Manipulation",
+            "weight": 25,
+            "severity": "High",
+            "regex": re.compile(r'\b(refund|transferred by mistake|sent money by mistake|return excess|overpaid|cashback reward|claim reward)\b', re.IGNORECASE),
+            "reason": "A prevalent scam involves fake credit SMS followed by frantic calls claiming 'I sent you money by mistake, please return it'.",
+            "recommendation": "Open your official banking app and check your actual updated account ledger. Do not rely on SMS."
+        },
+        {
+            "id": "pin_general",
+            "name": "Confidential PIN / Credential Mention",
+            "category": "Authentication Secret",
+            "weight": 20,
+            "severity": "High",
+            "regex": re.compile(r'\b(upi pin|mpin|atm pin|enter 4 digit|enter 6 digit pin)\b', re.IGNORECASE),
+            "reason": "Payment requests should never demand typing PINs outside of authentic mobile banking apps.",
+            "recommendation": "Only enter your UPI PIN inside your bank's native mobile app keypad."
+        },
+        {
+            "id": "financial_urgency",
+            "name": "Payment Window Countdown Pressure",
+            "category": "Time Pressure",
+            "weight": 15,
+            "severity": "Medium",
+            "regex": re.compile(r'\b(expire\s+in|valid\s+for\s+\d+|within\s+\d+\s+min|immediate|urgent|right\s+now)\b', re.IGNORECASE),
+            "reason": "Rushed payment deadlines prevent users from verifying details with family or banks.",
+            "recommendation": "Legitimate transactions do not expire in 2-3 minutes under coercive threats."
+        },
+        {
+            "id": "external_link",
+            "name": "Unverified Payment / Phishing Link",
+            "category": "Technical Vector",
+            "weight": 20,
+            "severity": "Medium",
+            "regex": re.compile(r'(https?://[^\s]+|bit\.ly|[a-z0-9-]+\.(?:top|xyz|cc|tk|club))', re.IGNORECASE),
+            "reason": "External links may lead to counterfeit payment gateways mimicking Google Pay, PhonePe, or Paytm.",
+            "recommendation": "Always execute transactions inside authentic mobile banking apps, never via links."
+        }
+    ]
+
+    detected_signals = []
+    analyzed_signals = []
     flags = []
     explanations = []
     verification_steps = []
 
-    # 1. Reverse UPI Scam: Enter PIN to receive money / credit
-    pin_to_receive = re.search(r'\b(enter\s+(?:upi\s+)?pin\s+(?:to|for)\s+(?:receive|claim|credit|accept|get))\b', cleaned, re.IGNORECASE)
-    if pin_to_receive:
-        score += 45
-        flags.append("CRITICAL: Request asks you to enter your UPI PIN to RECEIVE or CLAIM money")
-        explanations.append("Fundamental UPI Rule: Your UPI PIN is strictly used to DEBIT funds from your account. Entering a PIN will transfer money out of your account, NEVER into it.")
-        verification_steps.append("DO NOT enter your PIN. Receiving funds via UPI requires ZERO authorization or PIN entry.")
+    for sig in signals_definition:
+        match = sig["regex"].search(cleaned)
+        if match:
+            matched_snippet = match.group(0)[:40]
+            # Avoid duplicate PIN scoring if reverse UPI PIN already fired
+            if sig["id"] == "pin_general" and any(d["id"] == "reverse_upi_pin" for d in detected_signals):
+                continue
 
-    # 2. General PIN / MPIN mention in payment context
-    pin_general = re.search(r'\b(upi pin|mpin|atm pin|enter 4 digit|enter 6 digit pin)\b', cleaned, re.IGNORECASE)
-    if pin_general and not pin_to_receive:
-        score += 25
-        flags.append("Mentions entering confidential UPI/ATM PIN")
-        explanations.append("Payment requests should never require sharing or typing PINs into unverified web forms or chat windows.")
-        verification_steps.append("Only type your UPI PIN within your verified banking app's authentic keypad overlay.")
+            entry = {
+                "id": sig["id"],
+                "name": sig["name"],
+                "category": sig["category"],
+                "weight": sig["weight"],
+                "severity": sig["severity"],
+                "status": "detected",
+                "matched_snippet": matched_snippet,
+                "reason": sig["reason"],
+                "recommendation": sig["recommendation"]
+            }
+            detected_signals.append(entry)
+            analyzed_signals.append(entry)
 
-    # 3. QR Code claiming to credit balance
-    qr_claim = re.search(r'\b(scan\s+(?:this\s+)?qr\s+(?:code\s+)?(?:to|and)\s+(?:receive|get|claim|credit|refund))\b', cleaned, re.IGNORECASE)
-    if qr_claim:
-        score += 35
-        flags.append("QR Code Scanning to Receive Money Claim")
-        explanations.append("Scanning a QR code in any UPI application initiates a PAY/TRANSFER operation. Scanning a QR cannot receive or deposit money into your account.")
-        verification_steps.append("Never scan a QR code sent by a buyer (e.g. OLX/Facebook Marketplace buyers claiming advance payment).")
+            flags.append(f"{sig['name']}: {matched_snippet}")
+            explanations.append(sig["reason"])
+            verification_steps.append(sig["recommendation"])
+        else:
+            analyzed_signals.append({
+                "id": sig["id"],
+                "name": sig["name"],
+                "category": sig["category"],
+                "weight": sig["weight"],
+                "severity": sig["severity"],
+                "status": "clean",
+                "matched_snippet": None,
+                "reason": sig["reason"],
+                "recommendation": sig["recommendation"]
+            })
 
-    # 4. Refund / Reversal / Mistaken Transfer Pressure
-    refund_reversal = re.search(r'\b(refund|transferred by mistake|sent money by mistake|return excess|overpaid|cashback reward|claim reward)\b', cleaned, re.IGNORECASE)
-    if refund_reversal:
-        score += 25
-        flags.append("Claims of accidental overpayment, lottery reward, or pending refund")
-        explanations.append("A prevalent scam involves sending a fake SMS of credited money, followed by frantic calls claiming 'I sent you money by mistake, please send it back'.")
-        verification_steps.append("Open your official banking app and check your actual updated account statement. Do not rely on SMS notifications.")
+    eval_res = evaluate_signal_scoring("payment_detector", cleaned, detected_signals)
 
-    # 5. Collect Request / Approve Payment Trap
-    collect_trap = re.search(r'\b(approve\s+(?:the\s+)?(?:request|payment|debit)|accept\s+request|click\s+pay\s+to\s+receive)\b', cleaned, re.IGNORECASE)
-    if collect_trap:
-        score += 30
-        flags.append("Collect Request Approval instruction")
-        explanations.append("Scammers trigger UPI 'Collect Requests' for amounts like ₹5,000 or ₹20,000, instructing victims to press 'Approve' to receive their prize or salary.")
-        verification_steps.append("Decline any unknown UPI Collect Request. Check the sender VPA (UPI ID) carefully.")
-
-    # 6. Pressure / Urgency in payment
-    urgency = re.search(r'\b(expire\s+in|valid\s+for\s+\d+|within\s+\d+\s+min|immediate|urgent|right\s+now)\b', cleaned, re.IGNORECASE)
-    if urgency:
-        score += 15
-        flags.append("High time pressure on financial transaction")
-        explanations.append("Creating rushed time limits prevents users from verifying transactions with family, friends, or banks.")
-        verification_steps.append("Legitimate commercial transactions do not expire in 2-3 minutes with threats.")
-
-    # 7. Unverified Third-party Payment Portals / Shortened Links
-    link_present = re.search(r'(https?://[^\s]+|bit\.ly|[a-z0-9-]+\.(?:top|xyz|cc|tk|club))', cleaned, re.IGNORECASE)
-    if link_present:
-        score += 20
-        flags.append(f"External payment link detected: {link_present.group(0)[:40]}")
-        explanations.append("Links can lead to phishing portals that spoof PhonePe, Google Pay, or Paytm landing pages.")
-        verification_steps.append("Always initiate transactions from within the verified mobile application, never through links sent in messages.")
-
-    risk_score = min(score, 100)
-
-    if risk_score >= 65:
-        risk_level = "High Financial Hazard"
-        assessment = "Multiple suspicious indicators strongly characteristic of known payment fraud vectors."
-    elif risk_score >= 35:
-        risk_level = "Moderate Caution Required"
-        assessment = "Contains questionable payment instructions or unverified claims. Verification is advised."
-    elif risk_score > 0:
-        risk_level = "Low Risk / Standard Transaction"
-        assessment = "Minor payment patterns detected. Review details before completing any authorization."
-    else:
-        risk_level = "No Specific Risk Detected"
-        assessment = "No known fraudulent payment instructions, deceptive reverse-credit language, or PIN traps identified."
+    if not flags and not eval_res["is_ambiguous"]:
         flags.append("No typical UPI reverse debit or cashback trap patterns found.")
         verification_steps.append("Verify payment recipient VPA or bank details through your regular address book.")
 
     return {
         "text_preview": cleaned[:120] + ("..." if len(cleaned) > 120 else ""),
-        "risk_score": risk_score,
-        "risk_level": risk_level,
-        "assessment": assessment,
+        "risk_score": eval_res["risk_score"],
+        "risk_level": eval_res["risk_level"],
+        "badge_color": eval_res["badge_color"],
+        "is_ambiguous": eval_res["is_ambiguous"],
+        "ambiguity_reason": eval_res["ambiguity_reason"],
+        "confidence": eval_res["confidence"],
+        "score_calculation": eval_res["score_calculation"],
+        "analyzed_signals": analyzed_signals,
         "detected_flags": flags,
         "risk_explanations": explanations,
-        "independent_verification_steps": verification_steps
+        "independent_verification_steps": verification_steps,
+        "advisory_disclaimer": eval_res["advisory_disclaimer"],
+        "privacy_notice": eval_res["privacy_notice"]
     }
-

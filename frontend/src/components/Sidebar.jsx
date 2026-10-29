@@ -13,7 +13,8 @@ import {
   Sparkles,
   Shield,
   X,
-  Download
+  Download,
+  BookOpen
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { id: 'session', label: 'Session Anomaly Lab', icon: Activity },
   { id: 'incidents', label: 'Unified Incident Hub', icon: ShieldCheck },
   { id: 'demo', label: 'Try Demo Mode', icon: Sparkles, badge: 'Live Presets' },
+  { id: 'methodology', label: 'Methodology & Privacy', icon: BookOpen, badge: 'Evaluation' },
 ];
 
 export default function Sidebar({ currentTab, setTab, isOpen, setIsOpen, setIsDownloadOpen }) {

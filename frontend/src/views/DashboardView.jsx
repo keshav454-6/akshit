@@ -16,7 +16,8 @@ import {
   Mic,
   Activity,
   CheckCircle2,
-  Download
+  Download,
+  Layers
 } from 'lucide-react';
 import ScoreGauge from '../components/ScoreGauge';
 
@@ -153,6 +154,10 @@ export default function DashboardView({ setTab, setIsDownloadOpen }) {
           <button onClick={() => setTab('demo')} className="btn-cyan">
             <Zap size={16} />
             <span>Launch Hackathon Demo</span>
+          </button>
+          <button onClick={() => setTab('methodology')} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Layers size={15} />
+            <span>Methodology & Privacy</span>
           </button>
         </div>
       </div>

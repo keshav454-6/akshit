@@ -1,7 +1,15 @@
 import os
+import sys
 import json
 import uuid
+import re
 from datetime import datetime
+
+# Ensure current module directory is in python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
 from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 
@@ -147,9 +155,9 @@ def scan_impersonation():
             severity=result["risk_level"],
             summary=result["warning_indicators"][0] if result["warning_indicators"] else "Suspected authority impersonation.",
             details={
-                "preview": result["text_preview"],
-                "entities": result["impersonated_entities"],
-                "verification": result["official_verification_steps"]
+                "preview": result.get("text_preview", ""),
+                "entities": result.get("impersonated_entities", []),
+                "verification": result.get("verification_guide", result.get("official_verification_steps", []))
             }
         )
 
@@ -339,9 +347,29 @@ def inject_session():
     result = inject_synthetic_anomaly(scenario)
     return jsonify(result)
 
+def sanitize_evidence(obj):
+    """
+    Recursively redacts or masks any sensitive strings (credentials, keys, passwords, tokens)
+    ensuring zero raw secret persistence in SQLite or exported incident reports.
+    """
+    if isinstance(obj, str):
+        s = re.sub(r'\b(AKIA[0-9A-Z]{16})\b', r'AKIA****************', obj)
+        s = re.sub(r'\b(sk-[a-zA-Z0-9]{32,}|sk-proj-[a-zA-Z0-9_-]{40,})\b', r'sk-proj-********************', s)
+        s = re.sub(r'\b(ghp_[a-zA-Z0-9]{36})\b', r'ghp_****************************', s)
+        s = re.sub(r'(?i)(password|passwd|pin|otp)\s*[:=]\s*["\']?([^"\'\s]{4,30})["\']?', r'\1=********', s)
+        return s
+    elif isinstance(obj, dict):
+        return {k: sanitize_evidence(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [sanitize_evidence(x) for x in obj]
+    return obj
+
 # ----------------- MODULE 9: UNIFIED INCIDENT HUB -----------------
 def log_incident_helper(module, title, risk_score, severity, summary, details):
     incident_id = f"CS-{uuid.uuid4().hex[:4].upper()}"
+    sanitized_details = sanitize_evidence(details or {})
+    sanitized_summary = sanitize_evidence(summary or "")
+
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
@@ -353,13 +381,76 @@ def log_incident_helper(module, title, risk_score, severity, summary, details):
         title,
         risk_score,
         severity,
-        summary,
-        json.dumps(details),
+        sanitized_summary,
+        json.dumps(sanitized_details),
         datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     ))
     conn.commit()
     conn.close()
     return incident_id
+
+# ----------------- FALSE POSITIVE & DETECTION FEEDBACK -----------------
+@app.route('/feedback', methods=['GET', 'POST'])
+@app.route('/api/feedback', methods=['GET', 'POST'])
+def handle_feedback():
+    conn = get_db()
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        data = request.get_json() or {}
+        module = data.get('module', 'general')
+        scan_id = data.get('scan_id', '')
+        feedback_type = data.get('feedback_type', 'useful_detection')
+        notes = data.get('notes', '')
+
+        fb_id = f"FB-{uuid.uuid4().hex[:6].upper()}"
+        cursor.execute('''
+            INSERT INTO scan_feedback (id, module, scan_id, feedback_type, user_note, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (fb_id, module, scan_id, feedback_type, notes, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+        conn.commit()
+        conn.close()
+        return jsonify({
+            "success": True,
+            "feedback_id": fb_id,
+            "message": f"Recorded user feedback: {feedback_type.replace('_', ' ').title()}",
+            "feedback_type": feedback_type
+        })
+    else:
+        cursor.execute("SELECT feedback_type, COUNT(*) as count FROM scan_feedback GROUP BY feedback_type")
+        summary_rows = cursor.fetchall()
+        summary = {r["feedback_type"]: r["count"] for r in summary_rows}
+
+        cursor.execute("SELECT * FROM scan_feedback ORDER BY rowid DESC LIMIT 50")
+        recent_rows = cursor.fetchall()
+        conn.close()
+
+        recent = []
+        for r in recent_rows:
+            recent.append({
+                "id": r["id"],
+                "module": r["module"],
+                "scan_id": r["scan_id"],
+                "feedback_type": r["feedback_type"],
+                "notes": r["user_note"],
+                "timestamp": r["created_at"]
+            })
+
+        return jsonify({
+            "total_feedbacks": sum(summary.values()),
+            "summary": {
+                "useful_detections": summary.get('useful_detection', 0),
+                "false_positives": summary.get('false_positive', 0)
+            },
+            "recent": recent
+        })
+
+# ----------------- DETECTION RULES CONFIGURATION API -----------------
+@app.route('/rules', methods=['GET'])
+@app.route('/api/rules', methods=['GET'])
+def get_detection_rules():
+    from detectors.scoring_engine import get_rules_config
+    return jsonify(get_rules_config())
 
 @app.route('/api/incidents', methods=['GET', 'POST'])
 def handle_incidents():
@@ -440,6 +531,7 @@ def update_incident_status(incident_id):
 
     return jsonify({"success": True, "id": incident_id, "status": new_status})
 
+@app.route('/incidents/export', methods=['GET'])
 @app.route('/api/incidents/export', methods=['GET'])
 def export_incidents():
     conn = get_db()
@@ -457,13 +549,13 @@ def export_incidents():
         sanitized.append({
             "incident_id": r["id"],
             "module": r["module"],
-            "title": r["title"],
+            "title": sanitize_evidence(r["title"]),
             "risk_score": r["risk_score"],
             "severity": r["severity"],
-            "summary": r["summary"],
+            "summary": sanitize_evidence(r["summary"]),
             "status": r["status"],
             "timestamp": r["created_at"],
-            "sanitized_evidence": det
+            "sanitized_evidence": sanitize_evidence(det)
         })
 
     return jsonify({

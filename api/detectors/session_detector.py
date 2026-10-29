@@ -33,7 +33,8 @@ def get_simulated_sessions() -> list:
             "severity": r["severity"],
             "anomaly_reason": r["anomaly_reason"],
             "status": r["status"],
-            "is_simulated": bool(r["is_simulated"])
+            "is_simulated": bool(r["is_simulated"]),
+            "simulation_disclaimer": "Synthetic Security Lab Event: Generated for defensive training, behavioral correlation, and evaluation purposes."
         })
     return sessions
 
