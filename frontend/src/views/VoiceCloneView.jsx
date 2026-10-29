@@ -15,6 +15,7 @@ import {
   Zap
 } from 'lucide-react';
 import ScoreGauge from '../components/ScoreGauge';
+import { analyzeVoiceLocally } from '../utils/onDeviceSecurityEngine';
 
 const QUESTIONS = [
   {
@@ -85,10 +86,18 @@ export default function VoiceCloneView() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers: currentAnswers, auto_log: false })
       });
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        const data = await res.json();
+        setResult(data);
+      } else {
+        const localData = analyzeVoiceLocally(currentAnswers);
+        setResult(localData);
+      }
       setResult(data);
     } catch (err) {
-      console.error(err);
+      const localData = analyzeVoiceLocally(currentAnswers);
+      setResult(localData);
     } finally {
       setLoading(false);
     }
@@ -270,7 +279,7 @@ export default function VoiceCloneView() {
                     {result.risk_level}
                   </span>
                   <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                    {result.active_indicators.length} Operational Red Flags Flagged
+                    {(result.active_indicators || []).length} Operational Red Flags Flagged
                   </span>
                 </div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)' }}>
@@ -304,8 +313,8 @@ export default function VoiceCloneView() {
                 <span>Active Extortion Indicators</span>
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {result.active_indicators.length > 0 ? (
-                  result.active_indicators.map((ind, i) => (
+                {(result.active_indicators || []).length > 0 ? (
+                  (result.active_indicators || []).map((ind, i) => (
                     <div key={i} className={`finding-item ${result.risk_score >= 60 ? 'danger' : 'warning'}`}>
                       <div style={{ fontSize: '0.84rem', color: 'var(--text-primary)', fontWeight: '600' }}>
                         {ind}
@@ -327,7 +336,7 @@ export default function VoiceCloneView() {
                 <span>Immediate Countermeasures</span>
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {result.actionable_countermeasures.map((cm, i) => (
+                {(result.actionable_countermeasures || []).map((cm, i) => (
                   <div key={i} style={{
                     padding: '10px 14px',
                     borderRadius: '8px',

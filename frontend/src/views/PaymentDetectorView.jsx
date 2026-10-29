@@ -268,7 +268,7 @@ export default function PaymentDetectorView() {
                 <span>Detected Payment Anomalies</span>
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {result.detected_flags.map((flag, i) => (
+                {(result.detected_flags || []).map((flag, i) => (
                   <div key={i} className={`finding-item ${result.risk_score >= 65 ? 'danger' : result.risk_score >= 35 ? 'warning' : 'clean'}`}>
                     <div style={{ fontSize: '0.84rem', color: 'var(--text-primary)', fontWeight: '600' }}>
                       {flag}
@@ -285,7 +285,7 @@ export default function PaymentDetectorView() {
                 <span>Independent Verification Checklist</span>
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {result.independent_verification_steps.map((step, i) => (
+                {(result.independent_verification_steps || []).map((step, i) => (
                   <div key={i} style={{
                     padding: '10px 14px',
                     borderRadius: '8px',
@@ -303,7 +303,7 @@ export default function PaymentDetectorView() {
                 ))}
               </div>
 
-              {result.risk_explanations.length > 0 && (
+              {(result.risk_explanations || []).length > 0 && (
                 <div style={{
                   marginTop: '14px',
                   padding: '12px',

@@ -362,7 +362,7 @@ export default function UrlAnalyzerView() {
                 <span>Heuristic Findings</span>
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {result.warning_indicators.map((ind, i) => (
+                {(result.warning_indicators || []).map((ind, i) => (
                   <div key={i} className={`finding-item ${result.risk_score >= 60 ? 'danger' : result.risk_score >= 35 ? 'warning' : 'clean'}`}>
                     <div style={{ fontSize: '0.84rem', color: 'var(--text-primary)', fontWeight: '600' }}>
                       {ind}
@@ -379,7 +379,7 @@ export default function UrlAnalyzerView() {
                 <span>Safety Guidance</span>
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {result.safety_recommendations.map((rec, i) => (
+                {(result.safety_recommendations || []).map((rec, i) => (
                   <div key={i} style={{
                     padding: '10px 14px',
                     borderRadius: '8px',

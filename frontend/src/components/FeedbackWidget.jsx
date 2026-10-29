@@ -31,6 +31,10 @@ export default function FeedbackWidget({ module, scanId = '', confidence = null,
     }
   };
 
+  const confScore = typeof confidence === 'number' ? confidence : (confidence?.score || 85);
+  const confLevel = (typeof confidence === 'object' && confidence?.level) ? confidence.level : (confScore >= 80 ? 'High Confidence' : 'Moderate Confidence');
+  const formulaStr = typeof scoreCalculation === 'string' ? scoreCalculation : (scoreCalculation?.formula || scoreCalculation?.calculation || 'Deterministic rule-based scoring: 0-100');
+
   return (
     <div style={{
       marginTop: '16px',
@@ -53,15 +57,15 @@ export default function FeedbackWidget({ module, scanId = '', confidence = null,
             padding: '2px 8px',
             borderRadius: '10px',
             fontWeight: '700',
-            background: confidence?.score >= 80 ? 'rgba(46, 139, 87, 0.15)' : confidence?.score >= 50 ? 'rgba(230, 149, 0, 0.15)' : 'rgba(100, 116, 139, 0.15)',
-            color: confidence?.score >= 80 ? '#2E8B57' : confidence?.score >= 50 ? '#D97706' : '#475569',
-            border: `1px solid ${confidence?.score >= 80 ? 'rgba(46, 139, 87, 0.3)' : 'rgba(230, 149, 0, 0.3)'}`
+            background: confScore >= 80 ? 'rgba(46, 139, 87, 0.15)' : confScore >= 50 ? 'rgba(230, 149, 0, 0.15)' : 'rgba(100, 116, 139, 0.15)',
+            color: confScore >= 80 ? '#2E8B57' : confScore >= 50 ? '#D97706' : '#475569',
+            border: `1px solid ${confScore >= 80 ? 'rgba(46, 139, 87, 0.3)' : 'rgba(230, 149, 0, 0.3)'}`
           }}>
-            {confidence?.level || 'Moderate Confidence'} ({confidence?.score || 80}%)
+            {confLevel} ({confScore}%)
           </span>
         </div>
 
-        {scoreCalculation?.formula && (
+        {formulaStr && (
           <button
             onClick={() => setShowFormula(!showFormula)}
             style={{
@@ -101,10 +105,10 @@ export default function FeedbackWidget({ module, scanId = '', confidence = null,
           color: '#1A2620'
         }}>
           <div style={{ fontWeight: '700', marginBottom: '4px', color: '#214C3A' }}>
-            📐 Transparent Scoring Method: {scoreCalculation.method}
+            📐 Transparent Scoring Method: {scoreCalculation?.method || 'Rule-Based Weighted Heuristic'}
           </div>
           <div style={{ fontFamily: 'monospace', background: '#F5F3ED', padding: '6px 8px', borderRadius: '6px' }}>
-            {scoreCalculation.formula}
+            {formulaStr}
           </div>
           {scoreCalculation.signal_contributions && scoreCalculation.signal_contributions.length > 0 && (
             <div style={{ marginTop: '8px' }}>

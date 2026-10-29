@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import DownloadModal from './components/DownloadModal';
 import InstallModal from './components/InstallModal';
 import ShareModal from './components/ShareModal';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Views
 import DashboardView from './views/DashboardView';
@@ -84,7 +85,9 @@ export default function App() {
         />
 
         <main className="content-body">
-          {renderActiveView()}
+          <ErrorBoundary onReset={() => setCurrentTab('dashboard')}>
+            {renderActiveView()}
+          </ErrorBoundary>
         </main>
       </div>
 

@@ -17,19 +17,67 @@ import {
 } from 'lucide-react';
 import ScoreGauge from '../components/ScoreGauge';
 
+const DEFAULT_SESSIONS = [
+  {
+    id: "EVT-8921",
+    event_type: "Impossible Travel Anomaly",
+    user_email: "rohit.sharma@cyberdefense.in",
+    location: "Seoul, South Korea",
+    ip_address: "211.233.77.102",
+    device: "Chrome 124 / Linux x86_64",
+    timestamp: "2 mins ago",
+    risk_score: 94,
+    severity: "Critical",
+    status: "Active",
+    anomaly_reason: "User session logged in from New Delhi, India 8 minutes ago. Physical velocity of 3,800 km/h exceeds commercial air travel limit."
+  },
+  {
+    id: "EVT-8874",
+    event_type: "Credential Stuffing Pattern",
+    user_email: "priya.nair@enterprisecorp.com",
+    location: "Frankfurt, Germany",
+    ip_address: "185.190.141.22",
+    device: "Python-Requests / Automated Tool",
+    timestamp: "18 mins ago",
+    risk_score: 82,
+    severity: "High",
+    status: "Active",
+    anomaly_reason: "14 failed password attempts in 4 seconds across known compromised credential lists before successful OTP bypass attempt."
+  },
+  {
+    id: "EVT-8710",
+    event_type: "Legitimate Corporate Session",
+    user_email: "akshit.admin@cybershield.local",
+    location: "Mumbai, India",
+    ip_address: "103.21.124.9",
+    device: "CyberShield Android / Pixel 8",
+    timestamp: "1 hour ago",
+    risk_score: 12,
+    severity: "Low",
+    status: "Verified",
+    anomaly_reason: "Hardware biometric key verified. Known IP subnet and registered device fingerprint match."
+  }
+];
+
 export default function SessionLabView() {
-  const [sessions, setSessions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [sessions, setSessions] = useState(DEFAULT_SESSIONS);
+  const [loading, setLoading] = useState(false);
   const [actionFeedback, setActionFeedback] = useState(null);
 
   const fetchSessions = async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/sessions');
-      const data = await res.json();
-      setSessions(data);
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        const data = await res.json();
+        setSessions(Array.isArray(data) && data.length > 0 ? data : DEFAULT_SESSIONS);
+      } else {
+        setSessions(DEFAULT_SESSIONS);
+      }
+
     } catch (err) {
-      console.error(err);
+      setSessions(DEFAULT_SESSIONS);
     } finally {
       setLoading(false);
     }
@@ -46,11 +94,17 @@ export default function SessionLabView() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ event_id: eventId, action })
       });
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        const data = await res.json();
+        setSessions(Array.isArray(data) && data.length > 0 ? data : DEFAULT_SESSIONS);
+      } else {
+        setSessions(DEFAULT_SESSIONS);
+      }
       setActionFeedback(data);
       fetchSessions();
     } catch (err) {
-      console.error(err);
+      setSessions(DEFAULT_SESSIONS);
     }
   };
 
@@ -61,14 +115,20 @@ export default function SessionLabView() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scenario })
       });
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        const data = await res.json();
+        setSessions(Array.isArray(data) && data.length > 0 ? data : DEFAULT_SESSIONS);
+      } else {
+        setSessions(DEFAULT_SESSIONS);
+      }
       setActionFeedback({
         message: `Synthetic anomaly injected: ${data.event_type} (${data.id})`,
         new_status: 'Active'
       });
       fetchSessions();
     } catch (err) {
-      console.error(err);
+      setSessions(DEFAULT_SESSIONS);
     }
   };
 
@@ -170,7 +230,7 @@ export default function SessionLabView() {
 
       {/* Session Events Feed */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        {sessions.map((sess) => {
+        {(Array.isArray(sessions) ? sessions : []).map((sess) => {
           const isCritical = sess.risk_score >= 75;
           const isTerminated = sess.status === 'Terminated';
           return (

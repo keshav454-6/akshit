@@ -260,7 +260,7 @@ export default function ScamDetectorView() {
                 <span>Detected Indicators & Red Flags</span>
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {result.warning_signs.map((sign, i) => (
+                {(result.warning_signs || []).map((sign, i) => (
                   <div key={i} className={`finding-item ${result.risk_score >= 70 ? 'danger' : result.risk_score >= 40 ? 'warning' : 'clean'}`}>
                     <div style={{ fontSize: '0.84rem', color: 'var(--text-primary)', fontWeight: '600' }}>
                       {sign}
@@ -277,7 +277,7 @@ export default function ScamDetectorView() {
                 <span>Protective Action Plan</span>
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {result.actions.map((act, i) => (
+                {(result.actions || []).map((act, i) => (
                   <div key={i} style={{
                     padding: '10px 14px',
                     borderRadius: '8px',
@@ -295,7 +295,7 @@ export default function ScamDetectorView() {
                 ))}
               </div>
 
-              {result.explanations.length > 0 && (
+              {(result.explanations || []).length > 0 && (
                 <div style={{
                   marginTop: '14px',
                   padding: '12px',

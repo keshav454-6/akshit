@@ -19,6 +19,7 @@ import {
   Zap
 } from 'lucide-react';
 import ScoreGauge from '../components/ScoreGauge';
+import { analyzePermissionLocally } from '../utils/onDeviceSecurityEngine';
 
 const ALL_PERMISSIONS = [
   { key: 'camera', label: 'Camera', icon: Camera, desc: 'Capture photographs and live video stream' },
@@ -76,10 +77,18 @@ export default function PermissionLensView() {
           auto_log: false // prevent flood on continuous live toggling
         })
       });
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        const data = await res.json();
+        setResult(data);
+      } else {
+        const localData = analyzePermissionLocally(category, perms, source);
+        setResult(localData);
+      }
       setResult(data);
     } catch (err) {
-      console.error("Live audit error:", err);
+      const localData = analyzePermissionLocally(category, perms, source);
+      setResult(localData);
     } finally {
       setLoading(false);
     }
@@ -316,7 +325,7 @@ export default function PermissionLensView() {
                     {result.risk_level}
                   </span>
                   <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                    Category: {result.app_category.replace('_', ' ').toUpperCase()} • {result.source_type}
+                    Category: {(result.app_category || '').replace('_', ' ').toUpperCase()} • {result.source_type}
                   </span>
                 </div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)' }}>
@@ -337,7 +346,7 @@ export default function PermissionLensView() {
 
           {/* Detailed breakdown list */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {result.permissions_audit.map((perm, idx) => (
+            {(result.permissions_audit || []).map((perm, idx) => (
               <div
                 key={idx}
                 style={{

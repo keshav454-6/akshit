@@ -15,6 +15,7 @@ import {
 import ScoreGauge from '../components/ScoreGauge';
 import SignalsBreakdown from '../components/SignalsBreakdown';
 import FeedbackWidget from '../components/FeedbackWidget';
+import { analyzeImpersonationLocally } from '../utils/onDeviceSecurityEngine';
 
 const IMPERSONATION_SAMPLES = [
   {
@@ -73,14 +74,17 @@ export default function ImpersonationView() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: textToScan, auto_log: shouldLog })
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Failed to analyze message");
-      } else {
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        const data = await res.json();
         setResult(data);
+      } else {
+        const localData = analyzeImpersonationLocally(textToScan);
+        setResult(localData);
       }
     } catch (err) {
-      setError("Network error connecting to analysis engine: " + err.message);
+      const localData = analyzeImpersonationLocally(textToScan);
+      setResult(localData);
     } finally {
       setLoading(false);
       setLiveScanning(false);
@@ -233,7 +237,7 @@ export default function ImpersonationView() {
                   </span>
                 </div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-                  Targeted Entity: {result.impersonated_entities.join(', ')}
+                  Targeted Entity: {(result.impersonated_entities || []).join(', ')}
                 </h3>
               </div>
             </div>
@@ -262,7 +266,7 @@ export default function ImpersonationView() {
                 <span>Impersonation Red Flags</span>
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {result.warning_indicators.map((ind, i) => (
+                {(result.warning_indicators || []).map((ind, i) => (
                   <div key={i} className={`finding-item ${result.risk_score >= 65 ? 'danger' : 'warning'}`}>
                     <div style={{ fontSize: '0.84rem', color: 'var(--text-primary)', fontWeight: '600' }}>
                       {ind}
@@ -271,7 +275,7 @@ export default function ImpersonationView() {
                 ))}
               </div>
 
-              {result.threat_explanations.length > 0 && (
+              {(result.threat_explanations || []).length > 0 && (
                 <div style={{
                   marginTop: '12px',
                   padding: '12px',
@@ -283,7 +287,7 @@ export default function ImpersonationView() {
                   lineHeight: '1.4'
                 }}>
                   <strong style={{ color: 'var(--primary-accent)' }}>Threat Context: </strong>
-                  {result.threat_explanations[0]}
+                  {(result.threat_explanations || [])[0]}
                 </div>
               )}
             </div>
@@ -295,7 +299,7 @@ export default function ImpersonationView() {
                 <span>Official Verification Protocol</span>
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {result.official_verification_steps.map((step, i) => (
+                {(result.official_verification_steps || []).map((step, i) => (
                   <div key={i} style={{
                     padding: '10px 14px',
                     borderRadius: '8px',

@@ -281,11 +281,11 @@ export default function LeakLockView() {
                     {result.risk_level}
                   </span>
                   <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                    {result.total_findings} Credentials Detected
+                    {result.total_findings || (result.findings || []).length} Credentials Detected
                   </span>
                 </div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-                  {result.total_findings > 0 ? 'Exposed Sensitive Secrets Found' : 'Clean Scan: Zero Secrets Detected'}
+                  {(result.total_findings || (result.findings || []).length) > 0 ? 'Exposed Sensitive Secrets Found' : 'Clean Scan: Zero Secrets Detected'}
                 </h3>
               </div>
             </div>
@@ -296,7 +296,7 @@ export default function LeakLockView() {
           </div>
 
           {/* Masked Findings Table */}
-          {result.findings && result.findings.length > 0 ? (
+          {(result.findings || []).length > 0 ? (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
                 <thead>
@@ -309,7 +309,7 @@ export default function LeakLockView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {result.findings.map((finding, idx) => (
+                  {(result.findings || []).map((finding, idx) => (
                     <tr
                       key={idx}
                       style={{

@@ -4,10 +4,10 @@ import { ShieldAlert, ShieldCheck, ChevronDown, ChevronUp, AlertTriangle, Layers
 export default function SignalsBreakdown({ signals = [] }) {
   const [expanded, setExpanded] = useState(true);
 
-  if (!signals || signals.length === 0) return null;
+  if (!signals || !Array.isArray(signals) || signals.length === 0) return null;
 
-  const detectedSignals = signals.filter(s => s.status === 'detected');
-  const cleanSignals = signals.filter(s => s.status === 'clean');
+  const detectedSignals = signals.filter(s => s && (s.status === 'detected' || s.triggered));
+  const cleanSignals = signals.filter(s => s && (s.status === 'clean' || (!s.triggered && s.status !== 'detected')));
 
   return (
     <div style={{
@@ -107,11 +107,11 @@ export default function SignalsBreakdown({ signals = [] }) {
                   )}
 
                   <div style={{ fontSize: '0.74rem', color: '#3D4F45', marginTop: '2px' }}>
-                    <strong>Why it's suspicious:</strong> {sig.reason}
+                    <strong>Why it's suspicious:</strong> {sig.reason || sig.description}
                   </div>
 
                   <div style={{ fontSize: '0.74rem', color: '#214C3A', fontWeight: '600', marginTop: '2px' }}>
-                    <strong>Recommended Next Step:</strong> {sig.recommendation}
+                    <strong>Recommended Next Step:</strong> {sig.recommendation || sig.recommended_action || 'Inspect cautiously.'}
                   </div>
                 </div>
               ))}
