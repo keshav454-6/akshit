@@ -14,6 +14,7 @@ import {
 import ScoreGauge from '../components/ScoreGauge';
 import SignalsBreakdown from '../components/SignalsBreakdown';
 import FeedbackWidget from '../components/FeedbackWidget';
+import { analyzeScamLocally } from '../utils/onDeviceSecurityEngine';
 
 const SAMPLE_MESSAGES = [
   {
@@ -72,14 +73,17 @@ export default function ScamDetectorView() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: textToScan, auto_log: shouldLog })
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Failed to analyze message");
-      } else {
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        const data = await res.json();
         setResult(data);
+      } else {
+        const localData = analyzeScamLocally(textToScan);
+        setResult(localData);
       }
     } catch (err) {
-      setError("Network error connecting to analysis engine: " + err.message);
+      const localData = analyzeScamLocally(textToScan);
+      setResult(localData);
     } finally {
       setLoading(false);
       setLiveScanning(false);

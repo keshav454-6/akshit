@@ -17,6 +17,7 @@ import {
 import ScoreGauge from '../components/ScoreGauge';
 import SignalsBreakdown from '../components/SignalsBreakdown';
 import FeedbackWidget from '../components/FeedbackWidget';
+import { analyzeLeakLocally } from '../utils/onDeviceSecurityEngine';
 
 const SAMPLE_LEAKS = [
   {
@@ -100,14 +101,17 @@ export default function LeakLockView() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: codeToScan, auto_log: shouldLog })
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Failed to scan secrets");
-      } else {
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        const data = await res.json();
         setResult(data);
+      } else {
+        const localData = analyzeLeakLocally(codeToScan);
+        setResult(localData);
       }
     } catch (err) {
-      setError("Network error connecting to scanner: " + err.message);
+      const localData = analyzeLeakLocally(codeToScan);
+      setResult(localData);
     } finally {
       setLoading(false);
       setLiveScanning(false);

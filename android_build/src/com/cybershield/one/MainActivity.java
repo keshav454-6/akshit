@@ -51,6 +51,11 @@ public class MainActivity extends Activity {
                     path = path.substring(1);
                 }
 
+                // If this is an API call, do NOT serve static index.html!
+                if (path.startsWith("api/") || path.equals("api")) {
+                    return null;
+                }
+
                 String assetPath = "dist/" + path;
 
                 try {

@@ -19,6 +19,7 @@ import {
 import ScoreGauge from '../components/ScoreGauge';
 import SignalsBreakdown from '../components/SignalsBreakdown';
 import FeedbackWidget from '../components/FeedbackWidget';
+import { analyzeUrlLocally } from '../utils/onDeviceSecurityEngine';
 
 const SAMPLE_URLS = [
   {
@@ -95,14 +96,18 @@ export default function UrlAnalyzerView() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: urlToScan, auto_log: shouldLog })
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Failed to analyze URL");
-      } else {
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        const data = await res.json();
         setResult(data);
+      } else {
+        const localData = analyzeUrlLocally(urlToScan);
+        setResult(localData);
       }
     } catch (err) {
-      setError("Network error connecting to analysis engine: " + err.message);
+      // On-device security engine fallback for offline / standalone mobile APK
+      const localData = analyzeUrlLocally(urlToScan);
+      setResult(localData);
     } finally {
       setLoading(false);
       setLiveScanning(false);
