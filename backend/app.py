@@ -29,6 +29,18 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 DIST_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dist')
 DOWNLOADS_DIR = os.path.join(DIST_DIR, 'downloads')
 
+def get_download_file_path(filename):
+    possible_paths = [
+        os.path.join(DOWNLOADS_DIR, filename),
+        os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'dist', 'downloads', filename)),
+        os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'frontend', 'public', 'downloads', filename)),
+        os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', filename)),
+    ]
+    for path in possible_paths:
+        if os.path.isfile(path):
+            return path
+    return None
+
 # Initialize database on startup
 init_db()
 
@@ -57,8 +69,8 @@ def health_check():
 @app.route('/download/launcher', methods=['GET'])
 @app.route('/api/download/launcher', methods=['GET'])
 def download_launcher():
-    file_path = os.path.join(DOWNLOADS_DIR, 'CyberShield-System-Launcher.bat')
-    if os.path.isfile(file_path):
+    file_path = get_download_file_path('CyberShield-System-Launcher.bat')
+    if file_path:
         return send_file(file_path, as_attachment=True, download_name='CyberShield-System-Launcher.bat')
     return jsonify({"error": "Launcher not found"}), 404
 
@@ -67,16 +79,16 @@ def download_launcher():
 @app.route('/download/system', methods=['GET'])
 @app.route('/api/download/system', methods=['GET'])
 def download_package():
-    file_path = os.path.join(DOWNLOADS_DIR, 'CyberShield-One-Windows.zip')
-    if os.path.isfile(file_path):
+    file_path = get_download_file_path('CyberShield-One-Windows.zip')
+    if file_path:
         return send_file(file_path, as_attachment=True, download_name='CyberShield-One-Windows.zip')
     return jsonify({"error": "Package not found"}), 404
 
 @app.route('/download/report', methods=['GET'])
 @app.route('/api/download/report', methods=['GET'])
 def download_report():
-    file_path = os.path.join(DOWNLOADS_DIR, 'CyberShield_Conversation_Report.html')
-    if os.path.isfile(file_path):
+    file_path = get_download_file_path('CyberShield_Conversation_Report.html')
+    if file_path:
         return send_file(file_path, as_attachment=True, download_name='CyberShield_Conversation_Report.html')
     return jsonify({"error": "Report not found"}), 404
 
