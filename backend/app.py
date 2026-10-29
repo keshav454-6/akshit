@@ -83,6 +83,14 @@ def download_package():
         return send_file(file_path, as_attachment=True, download_name='CyberShield-One-Windows.zip')
     return jsonify({"error": "Package not found"}), 404
 
+@app.route('/download/apk', methods=['GET'])
+@app.route('/api/download/apk', methods=['GET'])
+def download_apk():
+    file_path = get_download_file_path('CyberShield-One.apk')
+    if file_path:
+        return send_file(file_path, as_attachment=True, download_name='CyberShield-One.apk', mimetype='application/vnd.android.package-archive')
+    return jsonify({"error": "APK not found"}), 404
+
 @app.route('/download/report', methods=['GET'])
 @app.route('/api/download/report', methods=['GET'])
 def download_report():

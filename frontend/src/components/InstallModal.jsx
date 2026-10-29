@@ -167,6 +167,60 @@ export default function InstallModal({ isOpen, onClose, onOpenShare }) {
             </div>
           ) : (
             <>
+              {/* Android APK Download Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, #EBF3EE 0%, #D8EADF 100%)',
+                border: '1px solid #A2CEB5',
+                borderRadius: '12px',
+                padding: '14px 16px',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '10px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{
+                    background: '#214C3A',
+                    color: '#00F5D4',
+                    borderRadius: '10px',
+                    padding: '8px'
+                  }}>
+                    <Smartphone size={22} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.92rem', fontWeight: '800', color: '#1A2620' }}>
+                      Android Phone ke liye APK (.apk)
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: '#3D4F45' }}>
+                      Kisi bhi mobile me direct transfer & install karein (~587 KB)
+                    </div>
+                  </div>
+                </div>
+
+                <a
+                  href="/download/apk"
+                  download="CyberShield-One.apk"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: '#214C3A',
+                    color: '#FFFFFF',
+                    textDecoration: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    fontSize: '0.84rem',
+                    fontWeight: '700',
+                    boxShadow: '0 2px 8px rgba(33, 76, 58, 0.25)'
+                  }}
+                >
+                  <Download size={14} />
+                  <span>Download APK</span>
+                </a>
+              </div>
+
               {/* Primary 1-Click Install Button */}
               <div style={{ marginBottom: '20px' }}>
                 <button

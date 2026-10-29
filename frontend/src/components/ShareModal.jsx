@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Share2, Copy, Check, MessageCircle, Send, Mail, Smartphone, QrCode, Globe, Shield, ExternalLink } from 'lucide-react';
+import { X, Share2, Copy, Check, MessageCircle, Send, Mail, Smartphone, QrCode, Globe, Shield, ExternalLink, Download } from 'lucide-react';
 
 export default function ShareModal({ isOpen, onClose }) {
   const [copied, setCopied] = useState(false);
@@ -129,14 +129,30 @@ export default function ShareModal({ isOpen, onClose }) {
               padding: '10px 0',
               border: 'none',
               background: 'none',
-              fontSize: '0.85rem',
+              fontSize: '0.82rem',
               fontWeight: activeTab === 'quick' ? '700' : '600',
               color: activeTab === 'quick' ? '#214C3A' : '#737373',
               borderBottom: activeTab === 'quick' ? '3px solid #214C3A' : '3px solid transparent',
               cursor: 'pointer'
             }}
           >
-            Direct Share (WhatsApp & Apps)
+            Direct Share
+          </button>
+          <button
+            onClick={() => setActiveTab('apk')}
+            style={{
+              flex: 1,
+              padding: '10px 0',
+              border: 'none',
+              background: 'none',
+              fontSize: '0.82rem',
+              fontWeight: activeTab === 'apk' ? '700' : '600',
+              color: activeTab === 'apk' ? '#214C3A' : '#737373',
+              borderBottom: activeTab === 'apk' ? '3px solid #214C3A' : '3px solid transparent',
+              cursor: 'pointer'
+            }}
+          >
+            Android APK (.apk)
           </button>
           <button
             onClick={() => setActiveTab('qr')}
@@ -145,14 +161,14 @@ export default function ShareModal({ isOpen, onClose }) {
               padding: '10px 0',
               border: 'none',
               background: 'none',
-              fontSize: '0.85rem',
+              fontSize: '0.82rem',
               fontWeight: activeTab === 'qr' ? '700' : '600',
               color: activeTab === 'qr' ? '#214C3A' : '#737373',
               borderBottom: activeTab === 'qr' ? '3px solid #214C3A' : '3px solid transparent',
               cursor: 'pointer'
             }}
           >
-            QR Code (Phone Scan)
+            QR Scan
           </button>
           <button
             onClick={() => setActiveTab('network')}
@@ -161,14 +177,14 @@ export default function ShareModal({ isOpen, onClose }) {
               padding: '10px 0',
               border: 'none',
               background: 'none',
-              fontSize: '0.85rem',
+              fontSize: '0.82rem',
               fontWeight: activeTab === 'network' ? '700' : '600',
               color: activeTab === 'network' ? '#214C3A' : '#737373',
               borderBottom: activeTab === 'network' ? '3px solid #214C3A' : '3px solid transparent',
               cursor: 'pointer'
             }}
           >
-            Wi-Fi / Local Network
+            Wi-Fi Link
           </button>
         </div>
 
@@ -356,6 +372,92 @@ export default function ShareModal({ isOpen, onClose }) {
             </div>
           )}
 
+          {activeTab === 'apk' && (
+            <div>
+              {/* APK Hero Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, #214C3A 0%, #1A3D2E 100%)',
+                borderRadius: '14px',
+                padding: '18px 20px',
+                color: '#FFFFFF',
+                marginBottom: '16px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                  <div style={{
+                    background: 'rgba(0, 245, 212, 0.2)',
+                    border: '1px solid rgba(0, 245, 212, 0.5)',
+                    borderRadius: '10px',
+                    padding: '8px',
+                    display: 'flex'
+                  }}>
+                    <Smartphone size={24} color="#00F5D4" />
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800' }}>CyberShield One APK File</h3>
+                    <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: '#D8D5CD' }}>
+                      Standalone Android App Package • Size: 587 KB
+                    </p>
+                  </div>
+                </div>
+
+                <p style={{ margin: '0 0 14px', fontSize: '0.82rem', color: '#E8E5DD', lineHeight: '1.4' }}>
+                  Ye APK file kisi bhi Android phone me bina internet ke complete CyberShield One chalati hai. Ise Bluetooth ya WhatsApp se bhejein.
+                </p>
+
+                <a
+                  href="/download/apk"
+                  download="CyberShield-One.apk"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    background: '#00F5D4',
+                    color: '#040814',
+                    borderRadius: '10px',
+                    padding: '11px',
+                    fontSize: '0.9rem',
+                    fontWeight: '800',
+                    textDecoration: 'none',
+                    boxShadow: '0 2px 10px rgba(0, 245, 212, 0.35)'
+                  }}
+                >
+                  <Download size={18} />
+                  <span>Download CyberShield-One.apk</span>
+                </a>
+              </div>
+
+              {/* Desktop Location Tip */}
+              <div style={{
+                background: '#F5F3ED',
+                border: '1px solid #D8D5CD',
+                borderRadius: '12px',
+                padding: '14px',
+                fontSize: '0.82rem',
+                color: '#3D4F45'
+              }}>
+                <div style={{ fontWeight: '700', color: '#1A2620', marginBottom: '4px' }}>
+                  📁 Aapke Desktop par file ready hai:
+                </div>
+                <div style={{
+                  background: '#FFFFFF',
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  fontFamily: 'monospace',
+                  fontSize: '0.78rem',
+                  color: '#214C3A',
+                  border: '1px solid #D8D5CD',
+                  marginBottom: '10px'
+                }}>
+                  C:\Users\agarw\OneDrive\Desktop\CyberShield-One.apk
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#555' }}>
+                  💡 <strong>Tip:</strong> Aap seedha <strong>WhatsApp Web</strong> ya <strong>Telegram</strong> khol kar apne Desktop se <code style={{ color: '#214C3A' }}>CyberShield-One.apk</code> ko drag & drop karke doston ko bhej sakte hain!
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'qr' && (
             <div style={{ textAlign: 'center' }}>
               <p style={{ margin: '0 0 14px', fontSize: '0.85rem', color: '#3D4F45' }}>
@@ -395,6 +497,92 @@ export default function ShareModal({ isOpen, onClose }) {
                   {copied ? <Check size={14} color="#2E8B57" /> : <Copy size={14} />}
                   <span>{copied ? 'Link Copied!' : 'Copy Share URL'}</span>
                 </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'apk' && (
+            <div>
+              {/* APK Hero Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, #214C3A 0%, #1A3D2E 100%)',
+                borderRadius: '14px',
+                padding: '18px 20px',
+                color: '#FFFFFF',
+                marginBottom: '16px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                  <div style={{
+                    background: 'rgba(0, 245, 212, 0.2)',
+                    border: '1px solid rgba(0, 245, 212, 0.5)',
+                    borderRadius: '10px',
+                    padding: '8px',
+                    display: 'flex'
+                  }}>
+                    <Smartphone size={24} color="#00F5D4" />
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800' }}>CyberShield One APK File</h3>
+                    <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: '#D8D5CD' }}>
+                      Standalone Android App Package • Size: 587 KB
+                    </p>
+                  </div>
+                </div>
+
+                <p style={{ margin: '0 0 14px', fontSize: '0.82rem', color: '#E8E5DD', lineHeight: '1.4' }}>
+                  Ye APK file kisi bhi Android phone me bina internet ke complete CyberShield One chalati hai. Ise Bluetooth ya WhatsApp se bhejein.
+                </p>
+
+                <a
+                  href="/download/apk"
+                  download="CyberShield-One.apk"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    background: '#00F5D4',
+                    color: '#040814',
+                    borderRadius: '10px',
+                    padding: '11px',
+                    fontSize: '0.9rem',
+                    fontWeight: '800',
+                    textDecoration: 'none',
+                    boxShadow: '0 2px 10px rgba(0, 245, 212, 0.35)'
+                  }}
+                >
+                  <Download size={18} />
+                  <span>Download CyberShield-One.apk</span>
+                </a>
+              </div>
+
+              {/* Desktop Location Tip */}
+              <div style={{
+                background: '#F5F3ED',
+                border: '1px solid #D8D5CD',
+                borderRadius: '12px',
+                padding: '14px',
+                fontSize: '0.82rem',
+                color: '#3D4F45'
+              }}>
+                <div style={{ fontWeight: '700', color: '#1A2620', marginBottom: '4px' }}>
+                  📁 Aapke Desktop par file ready hai:
+                </div>
+                <div style={{
+                  background: '#FFFFFF',
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  fontFamily: 'monospace',
+                  fontSize: '0.78rem',
+                  color: '#214C3A',
+                  border: '1px solid #D8D5CD',
+                  marginBottom: '10px'
+                }}>
+                  C:\Users\agarw\OneDrive\Desktop\CyberShield-One.apk
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#555' }}>
+                  💡 <strong>Tip:</strong> Aap seedha <strong>WhatsApp Web</strong> ya <strong>Telegram</strong> khol kar apne Desktop se <code style={{ color: '#214C3A' }}>CyberShield-One.apk</code> ko drag & drop karke doston ko bhej sakte hain!
+                </div>
               </div>
             </div>
           )}
