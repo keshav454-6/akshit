@@ -1,36 +1,80 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
+# Dependencies
+node_modules/
+frontend/node_modules/
 /.pnp
 .pnp.js
 
-# testing
-/coverage
-
-# next.js
+# Production / Build
+dist/
+frontend/dist/
+dist-ssr/
+/build
 /.next/
 /out/
+*.local
 
-# production
-/build
+# Testing & Coverage
+/coverage
 
-# misc
-.DS_Store
-*.pem
+# Python / Backend
+__pycache__/
+*/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# debug
+# Database & Runtime Data
+*.db
+*.sqlite
+*.sqlite3
+cybershield.db
+backend/cybershield.db
+
+# Logs & Debug
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
+pnpm-debug.log*
 
-# local env files
-.env*.local
+# Environment & Secrets
 .env
+.env*.local
+*.pem
+*.key
 
-# vercel
+# Deployment & Typescript
 .vercel
-
-# typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Operating System & IDEs
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
