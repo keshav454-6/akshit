@@ -8,11 +8,12 @@ export default function ShareModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const currentUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000';
-  const networkUrl = 'http://10.123.155.173:5000';
+  const publicApkUrl = 'https://github.com/keshav454-6/akshit/raw/main/android_build/CyberShield-One.apk';
+  const publicWindowsUrl = 'https://github.com/keshav454-6/akshit/raw/main/frontend/public/downloads/CyberShield-One-Windows-Installer.zip';
   const githubUrl = 'https://github.com/keshav454-6/akshit';
 
   const shareTitle = 'CyberShield One — All-in-One Cyber Defense Platform';
-  const shareMessage = `🛡️ Check out CyberShield One!\n\nAll-in-one AI & Heuristic Cybersecurity Platform for detecting:\n• Scam & Urgent Messages\n• Fake Customer-Care Numbers\n• Fraudulent UPI & Payment Requests\n• Voice-Clone Scams & Data Leaks\n\nOpen & Install App:\n${currentUrl}`;
+  const shareMessage = `🛡️ Check out CyberShield One!\n\nUnified Cybersecurity Defense Platform for detecting scams, fraudulent UPI requests, voice clones & leaks.\n\n📲 Android Phone App (Direct APK):\n${publicApkUrl}\n\n💻 Windows PC 1-Click Installer:\n${publicWindowsUrl}\n\n🌐 Project & Repo:\n${githubUrl}`;
 
   const handleCopy = (textToCopy) => {
     navigator.clipboard.writeText(textToCopy);
@@ -323,51 +324,75 @@ export default function ShareModal({ isOpen, onClose }) {
                 </a>
               </div>
 
-              {/* Copy Link Input Bar */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: '#F5F3ED',
-                border: '1px solid #D8D5CD',
-                borderRadius: '10px',
-                padding: '8px 12px'
-              }}>
-                <Globe size={16} color="#737373" />
-                <input
-                  type="text"
-                  readOnly
-                  value={currentUrl}
-                  style={{
-                    flex: 1,
-                    background: 'none',
-                    border: 'none',
-                    fontSize: '0.85rem',
-                    color: '#1A2620',
-                    outline: 'none',
-                    fontWeight: '600'
-                  }}
-                />
-                <button
-                  onClick={() => handleCopy(currentUrl)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    background: copied ? '#2E8B57' : '#214C3A',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '6px 12px',
-                    fontSize: '0.78rem',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  {copied ? <Check size={14} /> : <Copy size={14} />}
-                  <span>{copied ? 'Copied!' : 'Copy Link'}</span>
-                </button>
+              {/* Copy Links Bar */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: '#F5F3ED',
+                  border: '1px solid #D8D5CD',
+                  borderRadius: '10px',
+                  padding: '8px 12px'
+                }}>
+                  <Smartphone size={16} color="#214C3A" />
+                  <div style={{ flex: 1, fontSize: '0.8rem', color: '#1A2620', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    Android APK: {publicApkUrl}
+                  </div>
+                  <button
+                    onClick={() => handleCopy(publicApkUrl)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: copied ? '#2E8B57' : '#214C3A',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '5px 10px',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {copied ? <Check size={12} /> : <Copy size={12} />}
+                    <span>{copied ? 'Copied' : 'Copy APK Link'}</span>
+                  </button>
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: '#F5F3ED',
+                  border: '1px solid #D8D5CD',
+                  borderRadius: '10px',
+                  padding: '8px 12px'
+                }}>
+                  <Globe size={16} color="#214C3A" />
+                  <div style={{ flex: 1, fontSize: '0.8rem', color: '#1A2620', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    Windows PC: {publicWindowsUrl}
+                  </div>
+                  <button
+                    onClick={() => handleCopy(publicWindowsUrl)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: copied ? '#2E8B57' : '#214C3A',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '5px 10px',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {copied ? <Check size={12} /> : <Copy size={12} />}
+                    <span>{copied ? 'Copied' : 'Copy PC Link'}</span>
+                  </button>
+                </div>
               </div>
             </div>
           )}
