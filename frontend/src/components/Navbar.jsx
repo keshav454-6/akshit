@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Shield, RefreshCw, Zap, Bell, CheckCircle2, AlertCircle, Download } from 'lucide-react';
+import { Menu, Shield, RefreshCw, Zap, Bell, CheckCircle2, AlertCircle, Download, MonitorDown } from 'lucide-react';
 
-export default function Navbar({ currentTab, setTab, setIsOpen, searchGlobal, setSearchGlobal, setIsDownloadOpen }) {
+export default function Navbar({ currentTab, setTab, setIsOpen, searchGlobal, setSearchGlobal, setIsDownloadOpen, setIsInstallOpen }) {
   const [backendStatus, setBackendStatus] = useState('checking');
 
   const checkHealth = async () => {
@@ -109,6 +109,30 @@ export default function Navbar({ currentTab, setTab, setIsOpen, searchGlobal, se
             {backendStatus === 'online' ? 'API Engine Active' : 'Connecting API...'}
           </span>
         </div>
+
+        {/* Install App on System (PWA) button */}
+        <button
+          onClick={() => setIsInstallOpen && setIsInstallOpen(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: 'linear-gradient(135deg, #1A2620, #214C3A)',
+            color: '#00F5D4',
+            border: '1px solid rgba(0, 245, 212, 0.4)',
+            borderRadius: '10px',
+            padding: '7px 14px',
+            fontSize: '0.8rem',
+            fontWeight: '700',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0, 245, 212, 0.15)',
+            transition: 'all 0.2s'
+          }}
+          title="Install Website as an App on your Windows System"
+        >
+          <MonitorDown size={15} color="#00F5D4" />
+          <span>Install App</span>
+        </button>
 
         {/* Download in System button */}
         <button

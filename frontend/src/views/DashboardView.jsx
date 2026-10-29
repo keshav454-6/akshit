@@ -17,11 +17,12 @@ import {
   Activity,
   CheckCircle2,
   Download,
-  Layers
+  Layers,
+  MonitorDown
 } from 'lucide-react';
 import ScoreGauge from '../components/ScoreGauge';
 
-export default function DashboardView({ setTab, setIsDownloadOpen }) {
+export default function DashboardView({ setTab, setIsDownloadOpen, setIsInstallOpen }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -131,7 +132,7 @@ export default function DashboardView({ setTab, setIsDownloadOpen }) {
             <span>Refresh Telemetry</span>
           </button>
           <button
-            onClick={() => setIsDownloadOpen && setIsDownloadOpen(true)}
+            onClick={() => setIsInstallOpen && setIsInstallOpen(true)}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -148,8 +149,8 @@ export default function DashboardView({ setTab, setIsDownloadOpen }) {
               transition: 'all 0.2s'
             }}
           >
-            <Download size={16} />
-            <span>Download in System</span>
+            <MonitorDown size={16} />
+            <span>Install App on System</span>
           </button>
           <button onClick={() => setTab('demo')} className="btn-cyan">
             <Zap size={16} />

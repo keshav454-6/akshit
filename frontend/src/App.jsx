@@ -3,6 +3,7 @@ import './App.css';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import DownloadModal from './components/DownloadModal';
+import InstallModal from './components/InstallModal';
 
 // Views
 import DashboardView from './views/DashboardView';
@@ -23,11 +24,12 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchGlobal, setSearchGlobal] = useState('');
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const [isInstallOpen, setIsInstallOpen] = useState(false);
 
   const renderActiveView = () => {
     switch (currentTab) {
       case 'dashboard':
-        return <DashboardView setTab={setCurrentTab} setIsDownloadOpen={setIsDownloadOpen} />;
+        return <DashboardView setTab={setCurrentTab} setIsDownloadOpen={setIsDownloadOpen} setIsInstallOpen={setIsInstallOpen} />;
       case 'scam':
         return <ScamDetectorView />;
       case 'payment':
@@ -75,6 +77,7 @@ export default function App() {
           searchGlobal={searchGlobal}
           setSearchGlobal={setSearchGlobal}
           setIsDownloadOpen={setIsDownloadOpen}
+          setIsInstallOpen={setIsInstallOpen}
         />
 
         <main className="content-body">
@@ -86,6 +89,12 @@ export default function App() {
       <DownloadModal
         isOpen={isDownloadOpen}
         onClose={() => setIsDownloadOpen(false)}
+      />
+
+      {/* Install App Modal */}
+      <InstallModal
+        isOpen={isInstallOpen}
+        onClose={() => setIsInstallOpen(false)}
       />
     </div>
   );
