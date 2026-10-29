@@ -8,8 +8,8 @@ export default function ShareModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const currentUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000';
-  const publicApkUrl = 'https://github.com/keshav454-6/akshit/raw/main/android_build/CyberShield-One.apk';
-  const publicWindowsUrl = 'https://github.com/keshav454-6/akshit/raw/main/frontend/public/downloads/CyberShield-One-Windows-Installer.zip';
+  const publicApkUrl = 'https://github.com/keshav454-6/akshit/raw/main/CyberShield-One.apk';
+  const publicWindowsUrl = 'https://github.com/keshav454-6/akshit/raw/main/CyberShield-One-Windows-Installer.zip';
   const githubUrl = 'https://github.com/keshav454-6/akshit';
 
   const shareTitle = 'CyberShield One — All-in-One Cyber Defense Platform';
