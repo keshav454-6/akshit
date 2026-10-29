@@ -4,6 +4,15 @@
 
 ---
 
+## 📥 Direct Downloads & 1-Click Install
+
+| Target Device | Download Link | Description |
+|---|---|---|
+| **📲 Android Phone (APK)** | [**Download CyberShield-One.apk**](CyberShield-One.apk) | Standalone APK (~587 KB). Works offline on any Android phone. |
+| **💻 Windows PC / Laptop** | [**Download Windows Installer (.zip)**](CyberShield-One-Windows-Installer.zip) | Standalone Windows Package. Extract and double-click Setup-CyberShield-One.bat to install! |
+
+---
+
 ## 🌟 Executive Summary
 
 **CyberShield One** is a next-generation, all-in-one cybersecurity protection suite engineered to protect digital citizens, remote workers, and enterprises from modern social engineering, financial cyber fraud, credential leakage, over-privileged applications, and generative AI threats.
