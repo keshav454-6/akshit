@@ -44,7 +44,6 @@ def get_download_file_path(filename):
 # Initialize database on startup
 init_db()
 
-@app.route('/', methods=['GET'])
 @app.route('/api', methods=['GET'])
 @app.route('/api/', methods=['GET'])
 def api_index():
@@ -689,13 +688,14 @@ def serve_frontend_spa(path):
         return jsonify({"error": "API endpoint not found", "path": path}), 404
 
     possible_dist_dirs = [
-        DIST_DIR,
         os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dist'),
-        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'dist')
+        os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'dist')),
+        os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'frontend', 'dist')),
+        DIST_DIR,
     ]
     current_dist = DIST_DIR
     for d in possible_dist_dirs:
-        if os.path.isdir(d):
+        if os.path.isdir(d) and os.path.isfile(os.path.join(d, 'index.html')):
             current_dist = d
             break
 
