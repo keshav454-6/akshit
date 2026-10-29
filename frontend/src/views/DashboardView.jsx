@@ -18,11 +18,12 @@ import {
   CheckCircle2,
   Download,
   Layers,
-  MonitorDown
+  MonitorDown,
+  Share2
 } from 'lucide-react';
 import ScoreGauge from '../components/ScoreGauge';
 
-export default function DashboardView({ setTab, setIsDownloadOpen, setIsInstallOpen }) {
+export default function DashboardView({ setTab, setIsDownloadOpen, setIsInstallOpen, setIsShareOpen }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -151,6 +152,26 @@ export default function DashboardView({ setTab, setIsDownloadOpen, setIsInstallO
           >
             <MonitorDown size={16} />
             <span>Install App on System</span>
+          </button>
+          <button
+            onClick={() => setIsShareOpen && setIsShareOpen(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(255,255,255,0.12)',
+              color: '#FFFFFF',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: '10px',
+              padding: '9px 16px',
+              fontSize: '0.86rem',
+              fontWeight: '700',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            <Share2 size={16} />
+            <span>Share App</span>
           </button>
           <button onClick={() => setTab('demo')} className="btn-cyan">
             <Zap size={16} />

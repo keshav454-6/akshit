@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Shield, RefreshCw, Zap, Bell, CheckCircle2, AlertCircle, Download, MonitorDown } from 'lucide-react';
+import { Menu, Shield, RefreshCw, Zap, Bell, CheckCircle2, AlertCircle, Download, MonitorDown, Share2 } from 'lucide-react';
 
-export default function Navbar({ currentTab, setTab, setIsOpen, searchGlobal, setSearchGlobal, setIsDownloadOpen, setIsInstallOpen }) {
+export default function Navbar({ currentTab, setTab, setIsOpen, searchGlobal, setSearchGlobal, setIsDownloadOpen, setIsInstallOpen, setIsShareOpen }) {
   const [backendStatus, setBackendStatus] = useState('checking');
 
   const checkHealth = async () => {
@@ -156,6 +156,29 @@ export default function Navbar({ currentTab, setTab, setIsOpen, searchGlobal, se
         >
           <Download size={14} />
           <span>Download in System</span>
+        </button>
+
+        {/* Share App button */}
+        <button
+          onClick={() => setIsShareOpen && setIsShareOpen(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: '#F5F3ED',
+            color: '#214C3A',
+            border: '1px solid #D8D5CD',
+            borderRadius: '10px',
+            padding: '7px 12px',
+            fontSize: '0.8rem',
+            fontWeight: '700',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+          title="Share CyberShield One App (WhatsApp, Link, QR Code)"
+        >
+          <Share2 size={15} color="#214C3A" />
+          <span>Share</span>
         </button>
 
         {/* Hackathon Try Demo button */}

@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import DownloadModal from './components/DownloadModal';
 import InstallModal from './components/InstallModal';
+import ShareModal from './components/ShareModal';
 
 // Views
 import DashboardView from './views/DashboardView';
@@ -25,11 +26,12 @@ export default function App() {
   const [searchGlobal, setSearchGlobal] = useState('');
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [isInstallOpen, setIsInstallOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
 
   const renderActiveView = () => {
     switch (currentTab) {
       case 'dashboard':
-        return <DashboardView setTab={setCurrentTab} setIsDownloadOpen={setIsDownloadOpen} setIsInstallOpen={setIsInstallOpen} />;
+        return <DashboardView setTab={setCurrentTab} setIsDownloadOpen={setIsDownloadOpen} setIsInstallOpen={setIsInstallOpen} setIsShareOpen={setIsShareOpen} />;
       case 'scam':
         return <ScamDetectorView />;
       case 'payment':
@@ -78,6 +80,7 @@ export default function App() {
           setSearchGlobal={setSearchGlobal}
           setIsDownloadOpen={setIsDownloadOpen}
           setIsInstallOpen={setIsInstallOpen}
+          setIsShareOpen={setIsShareOpen}
         />
 
         <main className="content-body">
@@ -95,6 +98,13 @@ export default function App() {
       <InstallModal
         isOpen={isInstallOpen}
         onClose={() => setIsInstallOpen(false)}
+        onOpenShare={() => setIsShareOpen(true)}
+      />
+
+      {/* Share App Modal */}
+      <ShareModal
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
       />
     </div>
   );

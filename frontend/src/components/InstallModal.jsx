@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Monitor, CheckCircle2, ArrowRight, ShieldCheck, Download, Smartphone, Globe } from 'lucide-react';
+import { X, Monitor, CheckCircle2, ArrowRight, ShieldCheck, Download, Smartphone, Globe, Share2 } from 'lucide-react';
 
-export default function InstallModal({ isOpen, onClose }) {
+export default function InstallModal({ isOpen, onClose, onOpenShare }) {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [installSuccess, setInstallSuccess] = useState(false);
@@ -137,9 +137,33 @@ export default function InstallModal({ isOpen, onClose }) {
               <h4 style={{ margin: '0 0 4px', color: '#214C3A', fontSize: '1.05rem', fontWeight: '700' }}>
                 App Successfully Installed!
               </h4>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: '#3D4F45' }}>
+              <p style={{ margin: '0 0 14px', fontSize: '0.85rem', color: '#3D4F45' }}>
                 CyberShield One aapke Windows Start Menu, Taskbar aur Desktop par add ho gaya hai. Aap ise direct open kar sakte hain.
               </p>
+              {onOpenShare && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenShare();
+                  }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: '#214C3A',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    fontSize: '0.85rem',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Share2 size={15} />
+                  <span>App Doston ke Saath Share Karein</span>
+                </button>
+              )}
             </div>
           ) : (
             <>
